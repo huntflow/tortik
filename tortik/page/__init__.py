@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import os, sys
 import urlparse, urllib
 from itertools import count
 from functools import wraps, partial
 from copy import copy
 import tornado.web
 import tornado.curl_httpclient
+from tornado.escape import json_encode
 
-from tortik.util import decorate_all, make_list, real_ip, Item
+from tortik.util import decorate_all, make_list, real_ip, Item, make_qs
 from tortik.logger import PageLogger
 from tortik.util.async import AsyncGroup
 from tortik.util.parse import parse_xml, parse_json
@@ -15,7 +17,6 @@ from tortik.util.parse import parse_xml, parse_json
 stats = count()
 
 _DEBUG_ALL = "all"
-_DEBUG_ONLY_ERRORS = "only_errors"
 _DEBUG_NONE = "none"
 
 def preprocessors(method):
@@ -41,13 +42,11 @@ class RequestHandler(tornado.web.RequestHandler):
 
     def initialize(self, *args, **kwargs):
         debug_agrs = self.get_arguments('debug')
-        # debug_arg_set = (len(debug_agrs) > 0 and debug_pass is not None and
-        #                  (debug_pass == '' or debug_pass == debug_agrs[-1]))
 
         if debug_agrs:
             self.debug_type = _DEBUG_ALL
-        # elif options.debug:
-        #     self.debug_type = _DEBUG_ONLY_ERRORS
+            if not hasattr(RequestHandler, 'debug_loader'):
+                RequestHandler.debug_loader = self.create_template_loader(os.path.join(os.path.dirname(__file__), '..', 'templates'))
         else:
             self.debug_type = _DEBUG_NONE
 
@@ -65,15 +64,37 @@ class RequestHandler(tornado.web.RequestHandler):
         self.data = Item()
 
     def add(self, name, data):
+        #todo: maybe we should make Item() recursively
         self.data[name] = Item(data) if isinstance(data, dict) else data
+
+    def compute_etag(self):
+        return None
 
     def finish(self, chunk=None):
         if chunk is not None:
             self.write(chunk)
 
+        if hasattr(self, '_finish_started'):
+            tornado.web.RequestHandler.finish(self)
+            return
+        self._finish_started = True
+
         chunk = "".join(self._write_buffer)
         def finished_cb(handler, data):
-            self._write_buffer = [data]
+            handler.log.complete_logging(handler.get_status())
+            if handler.debug_type == _DEBUG_ALL:
+                import json
+                handler._write_buffer = [
+                    RequestHandler.debug_loader.load('debug.html').generate(
+                        data=self.log.get_debug_info(),
+                        size=sys.getsizeof,
+                        get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
+                        pretty_json=lambda x: json.dumps(json.loads(x), sort_keys=True, indent=4)
+                    )
+                ]
+            else:
+                handler._write_buffer = [data]
+
             tornado.web.RequestHandler.finish(handler)
 
         if self.postprocessors:
@@ -104,7 +125,7 @@ class RequestHandler(tornado.web.RequestHandler):
             content_type = response.headers.get('Content-Type').split(';')[0]
             response.data = None
             try:
-                if content_type == 'text/xml':
+                if 'xml' in content_type:
                     response.data = parse_xml(response)
                 elif content_type == 'application/json':
                     response.data = parse_json(response)
@@ -143,27 +164,7 @@ class RequestHandler(tornado.web.RequestHandler):
                 updated_query.update(data)
                 data = updated_query
 
-        def _make_qs(query_args):
-            def _encode(s):
-                if isinstance(s, unicode):
-                    return s.encode('utf-8')
-                else:
-                    return s
-
-            kv_pairs = []
-            for (key, val) in query_args.iteritems():
-                if val is not None:
-                    if isinstance(val, list):
-                        for v in val:
-                            kv_pairs.append((key, _encode(v)))
-                    else:
-                        kv_pairs.append((key, _encode(val)))
-
-            qs = urllib.urlencode(kv_pairs)
-
-            return qs
-
-        data = _make_qs(data) if isinstance(data, dict) else data
+        data = make_qs(data) if isinstance(data, dict) else data
 
         if method in ['GET', 'HEAD']:
             query = data

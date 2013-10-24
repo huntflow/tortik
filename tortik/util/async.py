@@ -6,28 +6,12 @@ log = logging.getLogger('tortik')
 
 from tornado.web import HTTPError
 
-def before(before_fun):
-    """
-    before_fun :: f(self, callback)
-    """
-    def before_fun_deco(fun):
-        def new_fun(self, *args, **kw):
-            def callback():
-                fun(self, *args, **kw)
-            before_fun(self, self.async_callback(callback))
-        return new_fun
-    return before_fun_deco
-
 class AsyncGroup(object):
     '''
     Grouping of several async requests and final callback in such way, that final callback is invoked after the last
      request is finished.
-
-    Tortik uses this class to find the right moment to finish page.
     '''
 
-    # in the breaking compatibility version parameters should be
-    # rearranged: name, finish_cb, log
     def __init__(self, finish_cb, log=log.debug, name=None):
         self.counter = 0
         self.finished = False

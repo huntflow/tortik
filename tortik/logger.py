@@ -81,7 +81,6 @@ class PageLogger(logging.LoggerAdapter):
     #                 })
 
     def request_started(self, request):
-        self.info(request)
         self.debug("Requesting {0} {1}".format(request.method, request.url), extra={_SKIP_EVENT: True})
         if self.debug_info is not None:
             event = {
@@ -103,20 +102,15 @@ class PageLogger(logging.LoggerAdapter):
                 self.error("Request for response is not found: {0}".format(resp.request.url))
             else:
                 now = time.time()
-                body = resp.body
-                try:
-                    body = json_decode(body)
-                except (TypeError, ValueError):
-                    pass
                 event.update({
                     'completed': now,
                     'took': now - event['started'],
                     'response': {
                         'code': resp.code,
                         'headers': resp.headers,
-                        'body': body,
-                        },
-                    })
+                        'body': resp.body,
+                    },
+                })
 
         level = logging.DEBUG
         if 400 <= resp.code < 500:
@@ -151,17 +145,16 @@ class PageLogger(logging.LoggerAdapter):
             additional_data = []
 
         data = [
-                   ('handler', self.handler_name),
-                   ('method', self.request.method),
-                   ('code', status_code),
-                   ('total', int(1000 * self.request.request_time()))  # <current_time> - <start> if request not finished yet
-               ] + self.stages.items() + additional_data
+            ('handler', self.handler_name),
+            ('method', self.request.method),
+            ('code', status_code),
+            ('total', int(1000 * self.request.request_time()))  # <current_time> - <start> if request not finished yet
+        ] + self.stages.items() + additional_data
 
         self.info('MONIK {0}'.format(' '.join('{0}={1}'.format(k, v) for (k, v) in data)))
 
     def get_debug_info(self):
         return self.debug_info.values()
-
 
 def configure(logfile):
     logging.getLogger("tornado").setLevel(logging.WARNING)

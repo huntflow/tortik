@@ -11,6 +11,7 @@ TEST_MODULES = [
     'tortik.test.simple_test',
     'tortik.test.preprocessor_test',
     'tortik.test.postprocessor_test',
+    'tortik.test.util_test'
 ]
 
 def all():
