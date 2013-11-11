@@ -7,9 +7,10 @@ from functools import wraps, partial
 from copy import copy
 import tornado.web
 import tornado.curl_httpclient
-from tornado.escape import json_encode
+import tornado.httpclient
+from tornado import stack_context
 
-from tortik.util import decorate_all, make_list, real_ip, Item, make_qs
+from tortik.util import decorate_all, make_list, real_ip, make_qs
 from tortik.logger import PageLogger
 from tortik.util.async import AsyncGroup
 from tortik.util.parse import parse_xml, parse_json
@@ -25,11 +26,17 @@ def preprocessors(method):
         def finished_cb():
             method(self, *args, **kwargs)
 
-        ag = AsyncGroup(finished_cb, log=self.log.debug, name='preprocessors')
-        for preprocessor in self.preprocessors:
-            preprocessor(self, ag.add_notification())
+        def _handle_exception(*args, **kwargs):
+            self._finish_started = True  # do not run postprocessors on error
+            self._stack_context_handle_exception(*args, **kwargs)
 
-        ag.try_finish()
+        ag = AsyncGroup(finished_cb, log=self.log.debug, name='preprocessors')
+
+        with stack_context.ExceptionStackContext(_handle_exception):
+            for preprocessor in self.preprocessors:
+                preprocessor(self, ag.add_notification())
+
+            ag.try_finish()
 
     return wrapper
 
@@ -61,11 +68,10 @@ class RequestHandler(tornado.web.RequestHandler):
         self.preprocessors = copy(self.preprocessors) if hasattr(self, 'preprocessors') else []
         self.postprocessors = copy(self.postprocessors) if hasattr(self, 'postprocessors') else []
 
-        self.data = Item()
+        self.data = {}
 
     def add(self, name, data):
-        #todo: maybe we should make Item() recursively
-        self.data[name] = Item(data) if isinstance(data, dict) else data
+        self.data[name] = data
 
     def compute_etag(self):
         return None
@@ -79,37 +85,38 @@ class RequestHandler(tornado.web.RequestHandler):
             return
         self._finish_started = True
 
-        chunk = "".join(self._write_buffer)
-        def finished_cb(handler, data):
-            handler.log.complete_logging(handler.get_status())
-            if handler.debug_type == _DEBUG_ALL:
-                import json
-                handler._write_buffer = [
-                    RequestHandler.debug_loader.load('debug.html').generate(
-                        data=self.log.get_debug_info(),
-                        size=sys.getsizeof,
-                        get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
-                        pretty_json=lambda x: json.dumps(json.loads(x), sort_keys=True, indent=4)
-                    )
-                ]
-            else:
-                handler._write_buffer = [data]
-
-            tornado.web.RequestHandler.finish(handler)
-
-        if self.postprocessors:
-            last = len(self.postprocessors) - 1
-            def add_cb(index):
-                if index == last:
-                    return finished_cb
+        with stack_context.ExceptionStackContext(self._stack_context_handle_exception):
+            chunk = "".join(self._write_buffer)
+            def finished_cb(handler, data):
+                handler.log.complete_logging(handler.get_status())
+                if handler.debug_type == _DEBUG_ALL:
+                    import json
+                    handler._write_buffer = [
+                        RequestHandler.debug_loader.load('debug.html').generate(
+                            data=self.log.get_debug_info(),
+                            size=sys.getsizeof,
+                            get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
+                            pretty_json=lambda x: json.dumps(json.loads(x), sort_keys=True, indent=4)
+                        )
+                    ]
                 else:
-                    def _cb(handler, data):
-                        self.postprocessors[index + 1](handler, data, add_cb(index + 1))
-                    return _cb
+                    handler._write_buffer = [data]
 
-            self.postprocessors[0](self, chunk, add_cb(0))
-        else:
-            finished_cb(self, chunk)
+                tornado.web.RequestHandler.finish(handler)
+
+            if self.postprocessors:
+                last = len(self.postprocessors) - 1
+                def add_cb(index):
+                    if index == last:
+                        return finished_cb
+                    else:
+                        def _cb(handler, data):
+                            self.postprocessors[index + 1](handler, data, add_cb(index + 1))
+                        return _cb
+
+                self.postprocessors[0](self, chunk, add_cb(0))
+            else:
+                finished_cb(self, chunk)
 
     def fetch_requests(self, requests, callback=None, stage='page'):
         self.log.stage_started(stage)
@@ -179,7 +186,7 @@ class RequestHandler(tornado.web.RequestHandler):
             'Content-Type': headers.get('Content-Type', 'application/x-www-form-urlencoded')
         })
 
-        req = tornado.curl_httpclient.HTTPRequest(
+        req = tornado.httpclient.HTTPRequest(
             url=urlparse.urlunsplit((scheme, url_prefix, path, query, '')),
             method=method,
             headers=headers,

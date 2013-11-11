@@ -75,18 +75,6 @@ HTTPError = tornado.web.HTTPError
 #         else:
 #             return message
 
-def make_item(item):
-    if isinstance(item, list):
-        return [make_item(local_item) for local_item in item]
-    if isinstance(item, dict):
-        return Item(item)
-    return item
-
-class Item(dict):
-    """A dict that allows for object-like property access syntax."""
-    def __getattr__(self, name):
-        return make_item(self.get(name))
-
 def update_url(url, update_args=None, remove_args=None):
     scheme, sep, url_new = url.partition('://')
     if len(scheme) == len(url):

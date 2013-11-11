@@ -12,4 +12,4 @@ class MyTestCase(AsyncTestCase):
         client.fetch("http://www.tornadoweb.org/", self.stop)
         response = self.wait()
         # Test contents of response
-        self.assertIn("FriendFeed", response.body)
+        self.assertTrue("FriendFeed" in response.body)

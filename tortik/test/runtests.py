@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import textwrap
-
 try:
     import unittest2 as unittest
 except ImportError:
@@ -11,12 +9,15 @@ TEST_MODULES = [
     'tortik.test.simple_test',
     'tortik.test.preprocessor_test',
     'tortik.test.postprocessor_test',
-    'tortik.test.util_test'
+    'tortik.test.exceptions_test',
 ]
 
 def all():
     return unittest.defaultTestLoader.loadTestsFromNames(TEST_MODULES)
 
-if __name__ == '__main__':
+def main():
     import tornado.testing
     tornado.testing.main()
+
+if __name__ == '__main__':
+    main()

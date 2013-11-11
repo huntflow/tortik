@@ -65,5 +65,5 @@ class PreprocessorHTTPTestCase(AsyncHTTPTestCase):
         self.http_client.fetch(self.get_url('/'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn("ok", response.body)
+        self.assertTrue("ok" in response.body)
 

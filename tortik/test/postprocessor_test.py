@@ -33,7 +33,7 @@ class Application(tornado.web.Application):
         )
         tornado.web.Application.__init__(self, handlers, **settings)
 
-class PreprocessorHTTPTestCase(AsyncHTTPTestCase):
+class PostprocessorHTTPTestCase(AsyncHTTPTestCase):
     def get_app(self):
         return Application()
 
@@ -44,4 +44,4 @@ class PreprocessorHTTPTestCase(AsyncHTTPTestCase):
         self.http_client.fetch(self.get_url('/'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn("Good bye!", response.body)
+        self.assertTrue("Good bye!" in response.body)
