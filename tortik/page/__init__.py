@@ -129,7 +129,7 @@ class RequestHandler(tornado.web.RequestHandler):
         ag = AsyncGroup(_finish_cb, self.log.debug, name=stage)
 
         def _on_fetch(response, name):
-            content_type = response.headers.get('Content-Type').split(';')[0]
+            content_type = response.headers.get('Content-Type', '').split(';')[0]
             response.data = None
             try:
                 if 'xml' in content_type:
