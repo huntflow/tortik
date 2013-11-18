@@ -9,6 +9,7 @@ import tornado.web
 import tornado.curl_httpclient
 import tornado.httpclient
 from tornado import stack_context
+from tornado.escape import json_encode
 
 from tortik.util import decorate_all, make_list, real_ip, make_qs
 from tortik.logger import PageLogger
@@ -26,13 +27,9 @@ def preprocessors(method):
         def finished_cb():
             method(self, *args, **kwargs)
 
-        def _handle_exception(*args, **kwargs):
-            self._finish_started = True  # do not run postprocessors on error
-            self._stack_context_handle_exception(*args, **kwargs)
-
         ag = AsyncGroup(finished_cb, log=self.log.debug, name='preprocessors')
 
-        with stack_context.ExceptionStackContext(_handle_exception):
+        with stack_context.ExceptionStackContext(self._stack_context_handle_exception):
             for preprocessor in self.preprocessors:
                 preprocessor(self, ag.add_notification())
 
@@ -76,36 +73,24 @@ class RequestHandler(tornado.web.RequestHandler):
     def compute_etag(self):
         return None
 
-    def finish(self, chunk=None):
-        if chunk is not None:
-            self.write(chunk)
-
-        if hasattr(self, '_finish_started'):
-            tornado.web.RequestHandler.finish(self)
-            return
-        self._finish_started = True
-
+    def complete(self, chunk=None):
         with stack_context.ExceptionStackContext(self._stack_context_handle_exception):
-            chunk = "".join(self._write_buffer)
             def finished_cb(handler, data):
                 handler.log.complete_logging(handler.get_status())
                 if handler.debug_type == _DEBUG_ALL:
                     import json
-                    handler._write_buffer = [
-                        RequestHandler.debug_loader.load('debug.html').generate(
-                            data=self.log.get_debug_info(),
-                            size=sys.getsizeof,
-                            get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
-                            pretty_json=lambda x: json.dumps(json.loads(x), sort_keys=True, indent=4)
-                        )
-                    ]
-                else:
-                    handler._write_buffer = [data]
+                    data = RequestHandler.debug_loader.load('debug.html').generate(
+                        data=self.log.get_debug_info(),
+                        size=sys.getsizeof,
+                        get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
+                        pretty_json=lambda x: json.dumps(json.loads(x), sort_keys=True, indent=4)
+                    )
 
-                tornado.web.RequestHandler.finish(handler)
+                self.finish(data)
 
             if self.postprocessors:
                 last = len(self.postprocessors) - 1
+
                 def add_cb(index):
                     if index == last:
                         return finished_cb
@@ -139,6 +124,9 @@ class RequestHandler(tornado.web.RequestHandler):
                     response.data = parse_json(response)
             except:
                 self.log.warning('Could not parse response with Content-Type header')
+
+            if response.data is not None:
+                self.add(name, response.data)
 
             self.responses[name] = response
             self.log.request_complete(response)
