@@ -7,17 +7,17 @@
         <meta http-equiv="cleartype" content="on">
 
         <link rel="stylesheet" media="all" charset="utf-8" href="css/style.css" />
-        <link href="css/googlecode.css" media="all" rel="stylesheet" type="text/css" />
+        <link href="css/default.min.css" media="all" rel="stylesheet" type="text/css" />
     </head>
     <body>
     <div class="page">
 	    <h1 class="page-head">Tortik</h1>
 	    <h3>a micro framework atop of Tornado</h3>
 	    <div align="center">
-	    	<img src="img/parallel.png" style="height: 80%;" />
+	    	<img src="img/parallel.png" style="width: 432px;" />
 	    </div>
 
-	    <p align="center">Tortik provides ability to enchance your tornado web app to the next level.</p>
+	    <p align="center">Tortik provides an ability to enchance your tornado web app to the next level.</p>
 
 	    <h2>Preprocessors</h2>
 
@@ -32,16 +32,16 @@ def session(handler, callback):
         callback()
 
 	handler.fetch_requests(
-            handler.make_request( # creates HTTPRequest
-                name='session',  # request name
-                method='GET',
-                full_url=options.session_url,
-                headers=headers,
-                data=data, # data is a dict of parameters to pass to backend
-            ),
-            _cb,
-            'session'
-        )
+        handler.make_request( # creates HTTPRequest
+            name='session',  # request name
+            method='GET',
+            full_url=options.session_url,
+            headers=headers,
+            data=data, # data is a dict of parameters to pass to backend
+        ),
+        callback=_cb,
+        stage='session'
+    )
 
 def PageHandler(tortik.page.RequestHandler):
 	preprocessors = [
@@ -51,12 +51,13 @@ def PageHandler(tortik.page.RequestHandler):
 
 	def get(self):  # all get/post/.. methods are asynchronous by default
 	    # handler.session available now
+	    self.complete() # use it instead of self.finish to apply postprocessors 
 
 </code></pre></p>
 	    </div>
 
 	</div>
-    <script type="text/javascript" src="js/highlight.pack.js?5" charset="utf-8"></script>
+    <script type="text/javascript" src="js/highlight.min.js" charset="utf-8"></script>
     <script type="text/javascript">
         hljs.tabReplace = '&nbsp;&nbsp;&nbsp;&nbsp;';
         hljs.initHighlightingOnLoad();
