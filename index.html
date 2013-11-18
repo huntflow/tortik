@@ -1,1 +1,65 @@
-Documentation goes here
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8">
+        <title>Tortik</title>
+        <meta name="description" content="">
+        <meta http-equiv="cleartype" content="on">
+
+        <link rel="stylesheet" media="all" charset="utf-8" href="css/style.css" />
+        <link href="css/googlecode.css" media="all" rel="stylesheet" type="text/css" />
+    </head>
+    <body>
+    <div class="page">
+	    <h1 class="page-head">Tortik</h1>
+	    <h3>a micro framework atop of Tornado</h3>
+	    <div align="center">
+	    	<img src="img/parallel.png" style="height: 80%;" />
+	    </div>
+
+	    <p align="center">Tortik provides ability to enchance your tornado web app to the next level.</p>
+
+	    <h2>Preprocessors</h2>
+
+	    <div class="content">
+	    	<p>Provides a group of asynchronous handlers before main handler starts to work.</p>
+	    	<p><pre>
+<code>
+def session(handler, callback):
+	def _cb():
+        # json/xml parsed automatically and put into handler.responses[&lt;request name&gt;].data
+        handler.session = handler.responses['session'].data
+        callback()
+
+	handler.fetch_requests(
+            handler.make_request( # creates HTTPRequest
+                name='session',  # request name
+                method='GET',
+                full_url=options.session_url,
+                headers=headers,
+                data=data, # data is a dict of parameters to pass to backend
+            ),
+            _cb,
+            'session'
+        )
+
+def PageHandler(tortik.page.RequestHandler):
+	preprocessors = [
+	    session,
+	    pagedata
+	]
+
+	def get(self):  # all get/post/.. methods are asynchronous by default
+	    # handler.session available now
+
+</code></pre></p>
+	    </div>
+
+	</div>
+    <script type="text/javascript" src="js/highlight.pack.js?5" charset="utf-8"></script>
+    <script type="text/javascript">
+        hljs.tabReplace = '&nbsp;&nbsp;&nbsp;&nbsp;';
+        hljs.initHighlightingOnLoad();
+    </script>
+    </body>
+</html>    
