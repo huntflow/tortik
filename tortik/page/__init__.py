@@ -108,7 +108,7 @@ class RequestHandler(tornado.web.RequestHandler):
 
         def _finish_cb():
             self.log.stage_complete(stage)
-            if callback:
+            if callback is not None:
                 callback()
 
         ag = AsyncGroup(_finish_cb, self.log.debug, name=stage)
