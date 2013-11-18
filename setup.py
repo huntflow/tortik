@@ -30,7 +30,7 @@ setup(
     cmdclass={'test': TestCommand},
     install_requires=[
         "lxml >= 2.2.4",
-        "tornado >= 2.0-hh10",
-        "tornado_util >= 0.6.1",
+        "tornado >= 2.0",
+        "tornado_util >= 0.1",
     ]
 )

@@ -12,7 +12,7 @@ Depends: ${python:Depends},
   python-pycurl,
   python-lxml,
   python-daemon,
-  python-tornado (>= 2.0-hh10),
+  python-tornado (>= 2.0~hh7),
   python-tornado-util (>= 0.6.1),
 Recommends:
 Suggests:
