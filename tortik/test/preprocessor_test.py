@@ -39,7 +39,7 @@ class MainHandler(RequestHandler):
 
     def get(self):
         if self.first and self.second and self.third:
-            self.finish({'status': 'ok'})
+            self.complete({'status': 'ok'})
         else:
             raise tornado.web.HTTPError(500)
 

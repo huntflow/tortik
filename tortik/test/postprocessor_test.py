@@ -20,7 +20,7 @@ class MainHandler(RequestHandler):
         second_postprocessor,
     ]
     def get(self):
-        self.finish('Hello, world!')
+        self.complete('Hello, world!')
 
 class Application(tornado.web.Application):
     def __init__(self):

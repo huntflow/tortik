@@ -27,9 +27,8 @@ def preprocessors(method):
         def finished_cb():
             method(self, *args, **kwargs)
 
-        ag = AsyncGroup(finished_cb, log=self.log.debug, name='preprocessors')
-
         with stack_context.ExceptionStackContext(self._stack_context_handle_exception):
+            ag = AsyncGroup(finished_cb, log=self.log.debug, name='preprocessors')
             for preprocessor in self.preprocessors:
                 preprocessor(self, ag.add_notification())
 

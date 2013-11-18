@@ -22,12 +22,12 @@ def postprocessor(handler, data, callback):
 class MainHandler(RequestHandler):
     preprocessors = [
         preprocessor
-    ],
+    ]
     postprocessors = [
         check_postprocessor
     ]
     def get(self):
-        self.finish({'status': 'ok'})
+        self.complete({'status': 'ok'})
 
 
 class SecondHandler(RequestHandler):
@@ -35,7 +35,7 @@ class SecondHandler(RequestHandler):
         postprocessor
     ]
     def get(self):
-        self.finish({'status': 'ok'})
+        self.complete({'status': 'ok'})
 
 class Application(tornado.web.Application):
     def __init__(self):
