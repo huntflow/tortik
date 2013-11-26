@@ -24,8 +24,7 @@
 	    <div class="content">
 	    	<p>Provides a group of asynchronous handlers before main handler starts to work.</p>
 	    	<p><pre>
-<code>
-def session(handler, callback):
+<code>def session(handler, callback):
 	def _cb():
         # json/xml parsed automatically and put into handler.responses[&lt;request name&gt;].data
         handler.session = handler.responses['session'].data
@@ -40,22 +39,90 @@ def session(handler, callback):
             data=data, # data is a dict of parameters to pass to backend
         ),
         callback=_cb,
-        stage='session'
+        stage='session' # something about stages goes later
     )
 
-def PageHandler(tortik.page.RequestHandler):
+def Page(tortik.page.RequestHandler):
 	preprocessors = [
 	    session,
 	    pagedata
 	]
 
 	def get(self):  # all get/post/.. methods are asynchronous by default
-	    # handler.session available now
+	    # self.session is available now
 	    self.complete() # use it instead of self.finish to apply postprocessors 
-
 </code></pre></p>
 	    </div>
 
+	    <h2>Stages</h2>
+        <div class="content">
+            <p>All the request handling could be divided into parts: fetching session, do some user related stuff (request backends for data or post smth.), render a page. This parts are called stages in Tortik. Stages provide a better way to find perfomance issues or bottlenecks in your application.</p>
+            <p>Stage name could be passed as a parameter to <i>fetch_requests</i> method (default is <i>page</i>):</p>
+<p><pre><code class="python">handler.fetch_requests(
+    ...
+    callback=_cb,
+    stage='session'
+)                
+</code></pre></p>   
+            <p>or could be done manually:</p>         
+            <p><pre>
+<code>handler.log.stage_started('render')
+# do some hard render stuff
+handler.log.stage_complete('render')</code></pre></p>   
+            <p>After request handle completed a debug note would be printed:</p>
+            <p><pre>
+<code>MONIK handler=hhmobile.pages.Page method=GET code=200 total=93 session=13.98 page=47.14 render=21.77 translation=7.30</code></pre></p>   
+            <p>which means that request done with <i>hhmobile.pages.Page</i> and took total 93ms with stages: session, page, render and translation</p>
+        </div>  
+
+	    <h2>Request handler</h2>
+        <div class="content">
+            <p>All the standart Tornado method handlers (get, post, ...) are @asynchronous by default and you don't need to put this decorator every time.</p>
+            <p>The output data could be prepared by two ways:</p>
+            <ul>
+                <li>with <i>self.add</i> method</li>
+                <li>as an argument to <i>self.complete</i> </li>
+            </ul>
+<p><pre><code class="python">def Page(tortik.page.RequestHandler):
+    self.add('main_data', 'Hello, World!')
+    self.complete({'some_data': 'Hello, World!'})
+</code></pre></p>
+            <p>The difference is that in the second option your data passes directly to the postprocessors (more on them later) or to the <i>self.finish</i> method if there is no postprocessors in your handler.</p>
+            <p>In the first option your data is available in <i>self.data</i> dictionary and could be processed later.</p>
+        </div>
+
+        <h2>Postprocessors</h2>
+        <div class="content">
+        <p>Postprocessors is a set of handlers on your output data which run after <i>complete</i> method called.</p>
+<p><pre><code class="python">def template(handler, data, callback): # data is an argument passed to self.complete method
+    out = template_engine.render(handler.template_name,
+                                 data=handler.data, # dict of our self.add calls {'main_data': 'Hello, World!'}
+                                 ...)
+    callback(handler, out)
+
+def Page(tortik.page.RequestHandler):
+    postprocessors = [
+        template
+    ]
+
+    def get(self):
+        # do some handler stuff
+        self.add('main_data', 'Hello, World!')
+        self.complete()
+</code></pre></p>
+        <p>The result of <i>template_engine.render</i> would be transfered to the client.</p>
+        </div>
+
+	    <h2>Debug and logging</h2>
+        <div class="content">
+        <p>Tortik provides a standart method for logging with <i>self.log</i> object.</p>
+        <p>But the most powerfull feature is a debug page there you can see your page processing:</p>
+        <img src="img/debug.png">
+        <p>Information about every request to the backend:</p>
+        <img src="img/debug_more.png">
+        <p>You should pass a <i>?debug</i> argument to the page and page processing would be displayed.</p>
+        <p><b>NOTE</b> You should manually protect your application in production enviroment from the unwanted users to see this page there the sensitive data could be displayed.</p>
+        </div>
 	</div>
     <script type="text/javascript" src="js/highlight.min.js" charset="utf-8"></script>
     <script type="text/javascript">
