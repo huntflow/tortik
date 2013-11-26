@@ -49,6 +49,5 @@ setup(
     install_requires=[
         "lxml >= 2.2.4",
         "tornado >= 2.0",
-        "tornado_util >= 0.1",
     ]
 )
