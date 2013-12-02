@@ -1,13 +1,10 @@
 #!/usr/bin/env python
-
-import subprocess
-import re
 import os
-
 from setuptools import setup, find_packages, Command
+from setuptools.command.build_py import build_py
 
-changedata = subprocess.Popen(["dpkg-parsechangelog"], shell=False, stdout=subprocess.PIPE).communicate()[0]
-version = re.search("Version: (?P<ver>\d+\..*)", changedata).groupdict()["ver"]
+from tortik import version
+
 
 def find_package_data(package, *directories):
     data_files = []
@@ -23,6 +20,7 @@ def find_package_data(package, *directories):
 
     return data_files
 
+
 class TestCommand(Command):
     user_options = []
 
@@ -33,7 +31,17 @@ class TestCommand(Command):
         pass
 
     def run(self):
-        subprocess.check_call(["python", "-m", "tortik.test.runtests"])
+        import nose
+        nose.main(argv=['nosetests', 'tortik_tests/'])
+
+
+class BuildHook(build_py):
+    def run(self):
+        build_py.run(self)
+
+        build_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.build_lib, 'tortik')
+        with open(os.path.join(build_dir, 'version.py'), 'w') as version_file:
+            version_file.write('version = "{0}"\n'.format(version))
 
 setup(
     name="tortik",
@@ -41,13 +49,10 @@ setup(
     description="Tortik - python tornado framework",
     long_description=open("README.md").read(),
     url="https://github.com/hhru/tortik",
-    packages=find_packages(exclude=['tortik.test']),
+    packages=find_packages(exclude=['tortik_tests', 'tortik_tests.*']),
     package_data={
         "tortik": find_package_data("tortik", "templates"),
     },
-    cmdclass={'test': TestCommand},
-    install_requires=[
-        "lxml >= 2.2.4",
-        "tornado >= 2.0",
-    ]
+    cmdclass={'test': TestCommand, 'build_py': BuildHook},
+    requires=['tornado', 'lxml', 'nose'],
 )

@@ -1,26 +1,28 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-
 import tornado.web
 import tornado.ioloop
 from tornado.testing import AsyncHTTPTestCase
 from tortik.page import RequestHandler
 import tornado.curl_httpclient
 
+
 def first_postprocessor(handler, data, callback):
     callback(handler, data.replace('Hello,', 'Good'))
 
+
 def second_postprocessor(handler, data, callback):
     callback(handler, data.replace('Good world', 'Good bye'))
+
 
 class MainHandler(RequestHandler):
     postprocessors = [
         first_postprocessor,
         second_postprocessor,
     ]
+
     def get(self):
         self.complete('Hello, world!')
+
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -32,6 +34,7 @@ class Application(tornado.web.Application):
             debug=True,
         )
         tornado.web.Application.__init__(self, handlers, **settings)
+
 
 class PostprocessorHTTPTestCase(AsyncHTTPTestCase):
     def get_app(self):

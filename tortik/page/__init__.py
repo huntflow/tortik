@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import os, sys
-import urlparse, urllib
+import os
+import sys
+import urlparse
 from itertools import count
 from functools import wraps, partial
 from copy import copy
@@ -9,7 +10,6 @@ import tornado.web
 import tornado.curl_httpclient
 import tornado.httpclient
 from tornado import stack_context
-from tornado.escape import json_encode
 
 from tortik.util import decorate_all, make_list, real_ip, make_qs
 from tortik.logger import PageLogger
@@ -20,6 +20,7 @@ stats = count()
 
 _DEBUG_ALL = "all"
 _DEBUG_NONE = "none"
+
 
 def preprocessors(method):
     @wraps(method)
@@ -36,6 +37,7 @@ def preprocessors(method):
 
     return wrapper
 
+
 class RequestHandler(tornado.web.RequestHandler):
     decorators = [
         (preprocessors, 'preprocessors'),
@@ -49,7 +51,9 @@ class RequestHandler(tornado.web.RequestHandler):
         if debug_agrs:
             self.debug_type = _DEBUG_ALL
             if not hasattr(RequestHandler, 'debug_loader'):
-                RequestHandler.debug_loader = self.create_template_loader(os.path.join(os.path.dirname(__file__), '..', 'templates'))
+                RequestHandler.debug_loader = self.create_template_loader(
+                    os.path.join(os.path.dirname(__file__), '..', 'templates')
+                )
         else:
             self.debug_type = _DEBUG_NONE
 
@@ -191,5 +195,3 @@ class RequestHandler(tornado.web.RequestHandler):
 
     def add_postprocessor(self, postprocessor):
         self.postprocessors.append(postprocessor)
-
-

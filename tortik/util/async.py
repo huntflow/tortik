@@ -6,17 +6,18 @@ log = logging.getLogger('tortik')
 
 from tornado.web import HTTPError
 
+
 class AsyncGroup(object):
-    '''
+    """
     Grouping of several async requests and final callback in such way, that final callback is invoked after the last
      request is finished.
-    '''
+    """
 
-    def __init__(self, finish_cb, log=log.debug, name=None):
+    def __init__(self, finish_cb, log=None, name=None):
         self.counter = 0
         self.finished = False
         self.finish_cb = finish_cb
-        self.log_fun = log
+        self.log_fun = log if log is not None else log.debug
         self.name = name
 
         self.start_time = time.time()

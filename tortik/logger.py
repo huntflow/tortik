@@ -2,9 +2,8 @@
 from datetime import datetime
 import time
 import logging
-from tornado.escape import json_decode
 
-from tortik.util import OrderedDict
+from collections import OrderedDict
 
 LOGGER_NAME = 'tortik'
 _SKIP_EVENT = "skip_event"
@@ -155,6 +154,7 @@ class PageLogger(logging.LoggerAdapter):
 
     def get_debug_info(self):
         return self.debug_info.values()
+
 
 def configure(logfile):
     logging.getLogger("tornado").setLevel(logging.WARNING)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import time
@@ -9,6 +8,7 @@ from tornado.testing import AsyncHTTPTestCase
 
 from tortik.page import RequestHandler
 
+
 def first_preprocessor(handler, callback):
     def handle_request(response):
         handler.first = True
@@ -16,6 +16,7 @@ def first_preprocessor(handler, callback):
 
     http_client = tornado.curl_httpclient.CurlAsyncHTTPClient()
     http_client.fetch("https://api.hh.ru/status", handle_request, request_timeout=0.2)
+
 
 def second_preprocessor(handler, callback):
     def handle_request(response):
@@ -25,10 +26,12 @@ def second_preprocessor(handler, callback):
     http_client = tornado.curl_httpclient.CurlAsyncHTTPClient()
     http_client.fetch("https://api.hh.ru/status", handle_request, request_timeout=0.2)
 
+
 def third_preprocessor(handler, callback):
     time.sleep(0.5)
     handler.third = True
     callback()
+
 
 class MainHandler(RequestHandler):
     preprocessors = [
@@ -43,6 +46,7 @@ class MainHandler(RequestHandler):
         else:
             raise tornado.web.HTTPError(500)
 
+
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
@@ -53,6 +57,7 @@ class Application(tornado.web.Application):
             debug=True,
         )
         tornado.web.Application.__init__(self, handlers, **settings)
+
 
 class PreprocessorHTTPTestCase(AsyncHTTPTestCase):
     def get_app(self):
@@ -66,4 +71,3 @@ class PreprocessorHTTPTestCase(AsyncHTTPTestCase):
         response = self.wait()
         self.assertEqual(200, response.code)
         self.assertTrue("ok" in response.body)
-

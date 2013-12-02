@@ -12,7 +12,7 @@ ADDITIONAL_RESPONSE_CODES = {
     TOO_MANY_REQUESTS: 'Too Many Requests',
     REQUEST_HEADER_FIELDS_TOO_LARGE: 'Request Header Fields Too Large',
     NETWORK_AUTHENTICATION_REQUIRED: 'Network Authentication Required',
-    }
+}
 
 
 def check_status_code(status_code):

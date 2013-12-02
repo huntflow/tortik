@@ -6,6 +6,7 @@ from tornado.escape import json_decode
 
 from tortik.util import HTTPError
 
+
 def parse_xml(response):
     if response.code == 599 or response.buffer is None:
         raise HTTPError(httplib.SERVICE_UNAVAILABLE, 'Response timeout or no body buffer')
