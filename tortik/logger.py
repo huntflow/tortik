@@ -8,6 +8,8 @@ from collections import OrderedDict
 LOGGER_NAME = 'tortik'
 _SKIP_EVENT = "skip_event"
 
+tortik_log = logging.getLogger(LOGGER_NAME)
+
 
 class RequestIdFilter(logging.Filter):
     def filter(self, record):
@@ -41,7 +43,7 @@ class PageLogger(logging.LoggerAdapter):
         self.request = request
         logging.LoggerAdapter.__init__(
             self,
-            logging.getLogger(LOGGER_NAME),
+            tortik_log,
             {'request_id': str(request_id),
              'event_queue': self.debug_info})
         self.started = time.time()
@@ -158,7 +160,7 @@ class PageLogger(logging.LoggerAdapter):
 
 def configure(logfile):
     logging.getLogger("tornado").setLevel(logging.WARNING)
-    page_logger = logging.getLogger(LOGGER_NAME)
+    page_logger = tortik_log
 
     if logfile:
         page_logger.addHandler(logging.FileHandler(logfile))

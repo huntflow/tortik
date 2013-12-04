@@ -3,6 +3,7 @@
 import sys
 import unittest
 import os
+import importlib
 from os import path
 
 
@@ -22,7 +23,7 @@ class ImportAllPythonCodeTestCase(unittest.TestCase):
 
     def try_import(self, module):
         try:
-            __import__(module, globals(), locals(), [], -1)  # TODO: use importlib for python 2.7+
+            importlib.import_module(module)
         except ImportError, e:
             self.fail('Unable to import "{module}" module ({e!s}). \n\nSys paths:\n{paths}'.format(
                 module=module, e=e, paths='\n'.join(sys.path)

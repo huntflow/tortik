@@ -6,11 +6,13 @@ import urlparse
 from itertools import count
 from functools import wraps, partial
 from copy import copy
+import json
 import tornado.web
 import tornado.curl_httpclient
 import tornado.httpclient
 from tornado import stack_context
 
+from tortik import TORTIK_BASE_PATH
 from tortik.util import decorate_all, make_list, real_ip, make_qs
 from tortik.logger import PageLogger
 from tortik.util.async import AsyncGroup
@@ -24,14 +26,14 @@ _DEBUG_NONE = "none"
 
 def preprocessors(method):
     @wraps(method)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(handler, *args, **kwargs):
         def finished_cb():
-            method(self, *args, **kwargs)
+            method(handler, *args, **kwargs)
 
-        with stack_context.ExceptionStackContext(self._stack_context_handle_exception):
-            ag = AsyncGroup(finished_cb, log=self.log.debug, name='preprocessors')
-            for preprocessor in self.preprocessors:
-                preprocessor(self, ag.add_notification())
+        with stack_context.ExceptionStackContext(handler._stack_context_handle_exception):
+            ag = AsyncGroup(finished_cb, log=handler.log.debug, name='preprocessors')
+            for preprocessor in handler.preprocessors:
+                preprocessor(handler, ag.add_empty_cb())
 
             ag.try_finish()
 
@@ -52,7 +54,7 @@ class RequestHandler(tornado.web.RequestHandler):
             self.debug_type = _DEBUG_ALL
             if not hasattr(RequestHandler, 'debug_loader'):
                 RequestHandler.debug_loader = self.create_template_loader(
-                    os.path.join(os.path.dirname(__file__), '..', 'templates')
+                    os.path.join(TORTIK_BASE_PATH, 'templates')
                 )
         else:
             self.debug_type = _DEBUG_NONE
@@ -68,20 +70,22 @@ class RequestHandler(tornado.web.RequestHandler):
         self.preprocessors = copy(self.preprocessors) if hasattr(self, 'preprocessors') else []
         self.postprocessors = copy(self.postprocessors) if hasattr(self, 'postprocessors') else []
 
-        self.data = {}
+        self._extra_data = {}
 
     def add(self, name, data):
-        self.data[name] = data
+        self._extra_data[name] = data
+
+    def get_data(self):
+        return self._extra_data
 
     def compute_etag(self):
         return None
 
-    def complete(self, chunk=None):
+    def complete(self, output_data=None):
         with stack_context.ExceptionStackContext(self._stack_context_handle_exception):
             def finished_cb(handler, data):
                 handler.log.complete_logging(handler.get_status())
                 if handler.debug_type == _DEBUG_ALL:
-                    import json
                     data = RequestHandler.debug_loader.load('debug.html').generate(
                         data=self.log.get_debug_info(),
                         size=sys.getsizeof,
@@ -102,9 +106,9 @@ class RequestHandler(tornado.web.RequestHandler):
                             self.postprocessors[index + 1](handler, data, add_cb(index + 1))
                         return _cb
 
-                self.postprocessors[0](self, chunk, add_cb(0))
+                self.postprocessors[0](self, output_data, add_cb(0))
             else:
-                finished_cb(self, chunk)
+                finished_cb(self, output_data)
 
     def fetch_requests(self, requests, callback=None, stage='page'):
         self.log.stage_started(stage)

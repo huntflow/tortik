@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import time
-import logging
-log = logging.getLogger('tortik')
-
 from tornado.web import HTTPError
+from tortik.logger import tortik_log
 
 
 class AsyncGroup(object):
@@ -17,7 +15,7 @@ class AsyncGroup(object):
         self.counter = 0
         self.finished = False
         self.finish_cb = finish_cb
-        self.log_fun = log if log is not None else log.debug
+        self.log_fun = log if log is not None else tortik_log.debug
         self.name = name
 
         self.start_time = time.time()
@@ -28,13 +26,13 @@ class AsyncGroup(object):
         else:
             self.log_name = 'group'
 
-    def log(self, msg, *args, **kw):
+    def _log(self, msg, *args, **kw):
         self.log_fun(self.log_name + ": " + msg, *args, **kw)
 
     def finish(self):
         if not self.finished:
             self.finish_time = time.time()
-            self.log('done in %.2fms', (self.finish_time - self.start_time)*1000.)
+            self._log('done in %.2fms', (self.finish_time - self.start_time)*1000.)
             self.finished = True
 
             try:
@@ -53,12 +51,12 @@ class AsyncGroup(object):
 
     def _dec(self):
         self.counter -= 1
-        self.log('%s requests pending', self.counter)
+        self._log('%s requests pending', self.counter)
 
     def add(self, intermediate_cb):
         self._inc()
 
-        def new_cb(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             if not self.finished:
                 try:
                     self._dec()
@@ -71,15 +69,15 @@ class AsyncGroup(object):
                 else:
                     self.try_finish()
             else:
-                self.log("Ignoring response because of already finished group")
+                self._log("Ignoring response because of already finished group")
 
-        return new_cb
+        return wrapper
 
-    def add_notification(self):
+    def add_empty_cb(self):
         self._inc()
 
-        def new_cb(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             self._dec()
             self.try_finish()
 
-        return new_cb
+        return wrapper

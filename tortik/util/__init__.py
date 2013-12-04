@@ -6,32 +6,29 @@ import urlparse
 from types import FunctionType
 import tornado.web
 
-from tortik.util.http import get_status_code_message
-
-
-def decorate(func_name, func_obj, check_param):
-    """check if an object should be decorated"""
-    methods = ["get", "head", "post", "put", "delete"]
-    return (func_name in methods and
-            isinstance(func_obj, FunctionType) and
-            getattr(func_obj, check_param, True))
-
 
 def decorate_all(decorator_list):
+    def is_method_need_to_decorate(func_name, func_obj, check_param):
+        """check if an object should be decorated"""
+        methods = ["get", "head", "post", "put", "delete"]
+        return (func_name in methods and
+                isinstance(func_obj, FunctionType) and
+                getattr(func_obj, check_param, True))
+
     """decorate all instance methods (unless excluded) with the same decorator"""
     class DecorateAll(type):
         def __new__(cls, name, bases, dct):
             for func_name, func_obj in dct.iteritems():
                 for item in decorator_list:
                     decorator, check_param = item
-                    if decorate(func_name, func_obj, check_param):
+                    if is_method_need_to_decorate(func_name, func_obj, check_param):
                         dct[func_name] = decorator(dct[func_name])
             return super(DecorateAll, cls).__new__(cls, name, bases, dct)
 
         def __setattr__(self, func_name, func_obj):
             for item in decorator_list:
                 decorator, check_param = item
-                if decorate(func_name, func_obj, check_param):
+                if is_method_need_to_decorate(func_name, func_obj, check_param):
                     func_obj = decorator(func_obj)
             super(DecorateAll, self).__setattr__(func_name, func_obj)
     return DecorateAll
