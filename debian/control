@@ -12,7 +12,7 @@ Depends: ${python:Depends},
   python-pkg-resources,
   python-pycurl,
   python-lxml,
-  python-tornado (>= 2.0~hh7)
+  python-tornado (>= 2.0.0+hh16)
 Recommends:
 Suggests:
 Provides: ${python:Provides}
