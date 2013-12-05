@@ -21,6 +21,7 @@ class RequestIdFilter(logging.Filter):
                 'created': str(datetime.fromtimestamp(created).time()),
                 'msg': record.msg,
                 'args': record.args,
+                'exc_info': record.exc_info,
                 'type': record.levelname}
         return True
 
@@ -158,7 +159,7 @@ class PageLogger(logging.LoggerAdapter):
         return self.debug_info.values()
 
 
-def configure(logfile):
+def configure(logfile=None):
     logging.getLogger("tornado").setLevel(logging.WARNING)
     page_logger = tortik_log
 

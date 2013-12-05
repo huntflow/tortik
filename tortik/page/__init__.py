@@ -3,6 +3,7 @@
 import os
 import sys
 import urlparse
+import traceback
 from itertools import count
 from functools import wraps, partial
 from copy import copy
@@ -11,7 +12,7 @@ import tornado.web
 import tornado.curl_httpclient
 import tornado.httpclient
 from tornado import stack_context
-
+from tornado.options import options, define
 from tortik import TORTIK_BASE_PATH
 from tortik.util import decorate_all, make_list, real_ip, make_qs
 from tortik.logger import PageLogger
@@ -20,7 +21,11 @@ from tortik.util.parse import parse_xml, parse_json
 
 stats = count()
 
+define('debug_password', default='', help='Password for debug')
+define('debug', default=True, type=bool, help='Debug mode')
+
 _DEBUG_ALL = "all"
+_DEBUG_ONLY_ERRORS = "only_errors"
 _DEBUG_NONE = "none"
 
 
@@ -30,7 +35,7 @@ def preprocessors(method):
         def finished_cb():
             method(handler, *args, **kwargs)
 
-        with stack_context.ExceptionStackContext(handler._stack_context_handle_exception):
+        with stack_context.ExceptionStackContext(handler._handle_exception):
             ag = AsyncGroup(finished_cb, log=handler.log.debug, name='preprocessors')
             for preprocessor in handler.preprocessors:
                 preprocessor(handler, ag.add_empty_cb())
@@ -48,16 +53,24 @@ class RequestHandler(tornado.web.RequestHandler):
     __metaclass__ = decorate_all(decorators)
 
     def initialize(self, *args, **kwargs):
+        debug_pass = options.debug_password
         debug_agrs = self.get_arguments('debug')
+        debug_arg_set = (len(debug_agrs) > 0 and debug_pass is not None and
+                         (debug_pass == '' or debug_pass == debug_agrs[-1]))
 
-        if debug_agrs:
+        if debug_arg_set:
             self.debug_type = _DEBUG_ALL
-            if not hasattr(RequestHandler, 'debug_loader'):
-                RequestHandler.debug_loader = self.create_template_loader(
-                    os.path.join(TORTIK_BASE_PATH, 'templates')
-                )
+        elif options.debug:
+            self.debug_type = _DEBUG_ONLY_ERRORS
         else:
             self.debug_type = _DEBUG_NONE
+
+        if self.debug_type != _DEBUG_NONE and not hasattr(RequestHandler, 'debug_loader'):
+            RequestHandler.debug_loader = self.create_template_loader(
+                os.path.join(TORTIK_BASE_PATH, 'templates')
+            )
+
+        self.error_detected = False
 
         self.request_id = self.request.headers.get('X-Request-Id', str(stats.next()))
 
@@ -81,17 +94,42 @@ class RequestHandler(tornado.web.RequestHandler):
     def compute_etag(self):
         return None
 
+    def _handle_exception(self, type, value, tb):
+        if self.error_detected is True:  # prevent error infinite loop
+            self.log.error("Exception already detected")
+            if not self._finished:
+                self.finish()
+            return
+
+        self.error_detected = True
+        if self.debug_type in [_DEBUG_ALL, _DEBUG_ONLY_ERRORS]:
+            self.log.error("Uncaught exception %s\n%r", self._request_summary(),
+                           self.request, exc_info=(type, value, tb))
+
+            if self._finished:
+                return
+            self.set_status(500)
+            self.log.complete_logging(500)
+            self.finish_with_debug()
+        else:
+            self._stack_context_handle_exception(type, value, tb)
+
+    def finish_with_debug(self):
+        self.finish(RequestHandler.debug_loader.load('debug.html').generate(
+            data=self.log.get_debug_info(),
+            size=sys.getsizeof,
+            get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
+            pretty_json=lambda x: json.dumps(json.loads(x), sort_keys=True, indent=4),
+            format_exception=lambda x: "".join(traceback.format_exception(*x))
+        ))
+
     def complete(self, output_data=None):
-        with stack_context.ExceptionStackContext(self._stack_context_handle_exception):
+        with stack_context.ExceptionStackContext(self._handle_exception):
             def finished_cb(handler, data):
                 handler.log.complete_logging(handler.get_status())
                 if handler.debug_type == _DEBUG_ALL:
-                    data = RequestHandler.debug_loader.load('debug.html').generate(
-                        data=self.log.get_debug_info(),
-                        size=sys.getsizeof,
-                        get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
-                        pretty_json=lambda x: json.dumps(json.loads(x), sort_keys=True, indent=4)
-                    )
+                    self.finish_with_debug()
+                    return
 
                 self.finish(data)
 
