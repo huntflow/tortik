@@ -108,8 +108,10 @@ class RequestHandler(tornado.web.RequestHandler):
 
             if self._finished:
                 return
-            self.set_status(500)
-            self.log.complete_logging(500)
+
+            response_code = value.status_code if isinstance(value, tornado.web.HTTPError) else 500
+            self.set_status(response_code)
+            self.log.complete_logging(response_code)
             self.finish_with_debug()
         else:
             self._stack_context_handle_exception(type, value, tb)
