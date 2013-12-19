@@ -1,3 +1,9 @@
+python-tortik (0.1.0) unstable; urgency=low
+
+  * HH-37909 tortik base functionality
+
+ -- Vitaly Glibin (glibin) <v.glibin@hh.ru>  Thu, 19 Dec 2013 16:08:17 +0400
+
 python-tortik (0.0.1) unstable; urgency=low
 
   * Initial package build
