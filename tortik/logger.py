@@ -52,6 +52,7 @@ class PageLogger(logging.LoggerAdapter):
         self.handler_name = handler_name
         self.stages = OrderedDict()
         self.debug('Started {0} {1}'.format(request.method, request.uri), extra={_SKIP_EVENT: True})
+        self._completed = False
 
     def process(self, msg, kwargs):
         if not "extra" in kwargs:
@@ -143,6 +144,9 @@ class PageLogger(logging.LoggerAdapter):
             self.error("Stage {0} wasn't stared".format(stage_name))
 
     def complete_logging(self, status_code, additional_data=None):
+        if self._completed:
+            return
+
         if additional_data is None:
             additional_data = []
 
@@ -154,6 +158,8 @@ class PageLogger(logging.LoggerAdapter):
         ] + self.stages.items() + additional_data
 
         self.info('MONIK {0}'.format(' '.join('{0}={1}'.format(k, v) for (k, v) in data)))
+
+        self._completed = True
 
     def get_debug_info(self):
         return self.debug_info.values()

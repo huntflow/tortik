@@ -47,4 +47,4 @@ class PostprocessorHTTPTestCase(AsyncHTTPTestCase):
         self.http_client.fetch(self.get_url('/'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertTrue("Good bye!" in response.body)
+        self.assertIn("Good bye!", response.body)

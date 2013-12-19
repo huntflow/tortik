@@ -21,7 +21,7 @@ from tortik.util.parse import parse_xml, parse_json
 
 stats = count()
 
-define('debug_password', default='', help='Password for debug')
+define('debug_password', default=None, type=str, help='Password for debug')
 define('debug', default=True, type=bool, help='Debug mode')
 
 _DEBUG_ALL = "all"
@@ -93,6 +93,9 @@ class RequestHandler(tornado.web.RequestHandler):
 
     def compute_etag(self):
         return None
+
+    def on_finish(self):  # tornado 2.2+
+        self.log.complete_logging(self.get_status())
 
     def _handle_exception(self, type, value, tb):
         if self.error_detected is True:  # prevent error infinite loop
