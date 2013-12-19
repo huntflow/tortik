@@ -1,0 +1,20 @@
+Source: python-tortik
+Maintainer: Vitaly Glibin <v.glibin@hh.ru>
+Section: python
+Priority: optional
+Build-Depends: cdbs (>= 0.4.49), python-setuptools, debhelper (>= 7), python-support (>= 0.8.4)
+Standards-Version: 3.7.2
+X-Python-Version: >= 2.7
+
+Package: python-tortik
+Architecture: all
+Depends: ${python:Depends},
+  python-pkg-resources,
+  python-pycurl,
+  python-lxml,
+  python-tornado (>= 2.0.0+hh16)
+Recommends:
+Suggests:
+Provides: ${python:Provides}
+Description: Tortik - python tornado framework
+
