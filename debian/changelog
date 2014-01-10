@@ -1,3 +1,9 @@
+python-tortik (0.1.1) unstable; urgency=low
+
+  * HH-39573 fix tornado version
+
+ -- Vitaly Glibin (glibin) <v.glibin@hh.ru>  Fri, 10 Jan 2014 11:01:59 +0400
+
 python-tortik (0.1.0) unstable; urgency=low
 
   * HH-37909 tortik base functionality
