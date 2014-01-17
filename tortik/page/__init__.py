@@ -78,12 +78,15 @@ class RequestHandler(tornado.web.RequestHandler):
                               handler_name=(type(self).__module__ + '.' + type(self).__name__))
 
         self.responses = {}
-        self.http_client = tornado.curl_httpclient.CurlAsyncHTTPClient()
+        self.http_client = self.initialize_http_client()
 
         self.preprocessors = copy(self.preprocessors) if hasattr(self, 'preprocessors') else []
         self.postprocessors = copy(self.postprocessors) if hasattr(self, 'postprocessors') else []
 
         self._extra_data = {}
+
+    def initialize_http_client(self):
+        return tornado.curl_httpclient.CurlAsyncHTTPClient()
 
     def add(self, name, data):
         self._extra_data[name] = data
@@ -120,6 +123,7 @@ class RequestHandler(tornado.web.RequestHandler):
             self._stack_context_handle_exception(type, value, tb)
 
     def finish_with_debug(self):
+        self.set_header('Content-Type', 'text/html; charset=utf-8')
         self.finish(RequestHandler.debug_loader.load('debug.html').generate(
             data=self.log.get_debug_info(),
             size=sys.getsizeof,
@@ -195,7 +199,7 @@ class RequestHandler(tornado.web.RequestHandler):
 
         scheme = 'http'
         query = ''
-        body = ''
+        body = None
 
         if not isinstance(data, dict) and full_url is not None:
             data = urlparse.parse_qs(data)
