@@ -1,3 +1,9 @@
+python-tortik (0.1.2) unstable; urgency=low
+
+  * HH-39931 KeyError: 'took' at debug.html
+
+ -- Vitaly Glibin (glibin) <v.glibin@hh.ru>  Mon, 20 Jan 2014 14:31:38 +0400
+
 python-tortik (0.1.1) unstable; urgency=low
 
   * HH-39573 fix tornado version
