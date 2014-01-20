@@ -106,7 +106,7 @@
                 {% end %}
             {% elif entry['type'] == 'NET' %}
             <span class="entry-line">
-                <span class="entry-line__time">{{ int(entry['took']*1000) }} ms</span>
+                <span class="entry-line__time">{% if 'took' in entry %}{{ int(entry['took']*1000) }} ms{% else %}-{% end %}</span>
                 <span>
                     {{ entry['response']['code'] }} {{ entry['request']['method'] }} {{ round(size(entry['response']['body'])/1024.0, 1) }}Kb
                     {{ entry['request']['url'] }}
