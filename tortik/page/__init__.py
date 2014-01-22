@@ -32,10 +32,10 @@ _DEBUG_NONE = "none"
 def preprocessors(method):
     @wraps(method)
     def wrapper(handler, *args, **kwargs):
-        def finished_cb():
-            method(handler, *args, **kwargs)
-
         with stack_context.ExceptionStackContext(handler._handle_exception):
+            def finished_cb():
+                method(handler, *args, **kwargs)
+
             ag = AsyncGroup(finished_cb, log=handler.log.debug, name='preprocessors')
             for preprocessor in handler.preprocessors:
                 preprocessor(handler, ag.add_empty_cb())
@@ -119,8 +119,8 @@ class RequestHandler(tornado.web.RequestHandler):
             self.set_status(response_code)
             self.log.complete_logging(response_code)
             self.finish_with_debug()
-        else:
-            self._stack_context_handle_exception(type, value, tb)
+
+            return True
 
     def finish_with_debug(self):
         self.set_header('Content-Type', 'text/html; charset=utf-8')
