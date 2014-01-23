@@ -1,3 +1,9 @@
+python-tortik (0.1.3) unstable; urgency=low
+
+  *  HH-40000 fix for exception handling
+
+ -- Vitaly Glibin (glibin) <v.glibin@hh.ru>  Wed, 22 Jan 2014 20:22:17 +0400
+
 python-tortik (0.1.2) unstable; urgency=low
 
   * HH-39931 KeyError: 'took' at debug.html
