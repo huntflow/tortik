@@ -6,7 +6,16 @@ from os import path
 import unittest
 from StringIO import StringIO
 
-from tortik_tests import pep8
+min_pep8_version = '1.4.5'
+_version_to_tuple = lambda x: map(int, x.split('.'))
+try:
+    import pep8
+    pep8_version = _version_to_tuple(getattr(pep8, '__version__', '0.0'))
+    if pep8_version < _version_to_tuple(min_pep8_version):
+        raise ImportError
+except ImportError:
+    sys.stderr.write('pep8 >= {} not found, use internal version\n'.format(min_pep8_version))
+    from tortik_tests import pep8
 
 _project_root = path.abspath(path.join(path.dirname(__file__), '..'))
 _src_dirs = [path.join(_project_root, 'tortik'),
