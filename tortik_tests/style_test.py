@@ -11,6 +11,7 @@ from tortik_tests import pep8
 _project_root = path.abspath(path.join(path.dirname(__file__), '..'))
 _src_dirs = [path.join(_project_root, 'tortik'),
              path.join(_project_root, 'tortik_tests'),
+             path.join(_project_root, 'examples'),
              path.join(_project_root, 'setup.py')]
 
 
