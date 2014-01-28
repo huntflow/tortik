@@ -23,6 +23,7 @@ stats = count()
 
 define('debug_password', default=None, type=str, help='Password for debug')
 define('debug', default=True, type=bool, help='Debug mode')
+define('tortik_max_clients', default=200, type=int, help='Max clients (requests) for http_client')
 
 _DEBUG_ALL = "all"
 _DEBUG_ONLY_ERRORS = "only_errors"
@@ -85,8 +86,15 @@ class RequestHandler(tornado.web.RequestHandler):
 
         self._extra_data = {}
 
+    @staticmethod
+    def get_global_http_client():
+        if not hasattr(RequestHandler, '_http_client'):
+            RequestHandler._http_client = tornado.curl_httpclient.CurlAsyncHTTPClient(
+                max_clients=options.tortik_max_clients)
+        return RequestHandler._http_client
+
     def initialize_http_client(self):
-        return tornado.curl_httpclient.CurlAsyncHTTPClient()
+        return self.get_global_http_client()
 
     def add(self, name, data):
         self._extra_data[name] = data
