@@ -1,3 +1,10 @@
+python-tortik (0.1.5) unstable; urgency=low
+
+  * HH-40441 add timeout multiplier for all requests
+  * hello world example
+
+ -- Vitaly Glibin (glibin) <v.glibin@hh.ru>  Wed, 05 Feb 2014 12:04:55 +0400
+
 python-tortik (0.1.4) unstable; urgency=low
 
   * HH-40140 fix 599 response code from curl client
