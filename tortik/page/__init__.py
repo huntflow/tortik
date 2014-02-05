@@ -24,6 +24,7 @@ stats = count()
 define('debug_password', default=None, type=str, help='Password for debug')
 define('debug', default=True, type=bool, help='Debug mode')
 define('tortik_max_clients', default=200, type=int, help='Max clients (requests) for http_client')
+define('tortik_timeout_multiplier', default=1.0, type=float, help='Timeout multiplier (affects all requests)')
 
 _DEBUG_ALL = "all"
 _DEBUG_ONLY_ERRORS = "only_errors"
@@ -242,8 +243,8 @@ class RequestHandler(tornado.web.RequestHandler):
             method=method,
             headers=headers,
             body=body,
-            connect_timeout=connect_timeout,
-            request_timeout=request_timeout,
+            connect_timeout=connect_timeout*options.tortik_timeout_multiplier,
+            request_timeout=request_timeout*options.tortik_timeout_multiplier,
             follow_redirects=follow_redirects
         )
         req.name = name
