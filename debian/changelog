@@ -1,3 +1,9 @@
+python-tortik (0.1.6) unstable; urgency=low
+
+  * HH-41207 move logger FileHandler to WatchedFileHandler
+
+ -- Automated Build <v.glibin@hh.ru>  Thu, 13 Mar 2014 11:34:14 +0400
+
 python-tortik (0.1.5) unstable; urgency=low
 
   * HH-40441 add timeout multiplier for all requests
