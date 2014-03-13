@@ -170,6 +170,6 @@ def configure(logfile=None):
     page_logger = tortik_log
 
     if logfile:
-        page_logger.addHandler(logging.FileHandler(logfile))
+        page_logger.addHandler(logging.WatchedFileHandler(logfile))
     page_logger.addFilter(RequestIdFilter())
     page_logger.setLevel(logging.DEBUG)
