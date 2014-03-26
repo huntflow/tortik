@@ -104,7 +104,7 @@
     {% for entry in data %}
         <div class="entry entry_{{ entry['type'].lower() }}">
             {% if entry['type'] in ['DEBUG', 'INFO', 'WARNING', 'ERROR'] %}
-                {{ entry['type'] }} {{ (entry['msg'] % entry['args']) if isinstance(entry['msg'], basestring) else entry['msg'] }}
+                {{ entry['type'] }} {{ entry['msg'] }}
                 {% if entry.get('exc_info') %}
                 <pre>{{ format_exception(entry['exc_info']) }}</pre>
                 {% end %}
