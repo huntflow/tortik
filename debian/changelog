@@ -1,3 +1,9 @@
+python-tortik (0.1.7) unstable; urgency=low
+
+  * HH-41793 fix message formating at debug
+
+ -- Automated Build <v.glibin@hh.ru>  Wed, 26 Mar 2014 15:15:05 +0400
+
 python-tortik (0.1.5) unstable; urgency=low
 
   * HH-40441 add timeout multiplier for all requests
