@@ -19,8 +19,7 @@ class RequestIdFilter(logging.Filter):
             created = record.created or time.time()
             event_queue[record] = {
                 'created': str(datetime.fromtimestamp(created).time()),
-                'msg': record.msg,
-                'args': record.args,
+                'msg': record.getMessage(),
                 'exc_info': record.exc_info,
                 'type': record.levelname}
         return True
