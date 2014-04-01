@@ -54,7 +54,7 @@ class PageLogger(logging.LoggerAdapter):
         self._completed = False
 
     def process(self, msg, kwargs):
-        if not "extra" in kwargs:
+        if "extra" not in kwargs:
             kwargs["extra"] = self.extra
         else:
             kwargs["extra"].update(self.extra)
@@ -111,6 +111,7 @@ class PageLogger(logging.LoggerAdapter):
                         'code': resp.code,
                         'headers': resp.headers,
                         'body': resp.body,
+                        'data': resp.data
                     },
                 })
 
