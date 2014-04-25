@@ -1,3 +1,10 @@
+python-tortik (0.1.9) unstable; urgency=low
+
+  * HH-40443 add query params to POST request, fix several bugs, add
+    tests, add dumper for better output navigation
+
+ -- Automated Build <v.glibin@hh.ru>  Fri, 25 Apr 2014 12:05:56 +0400
+
 python-tortik (0.1.7) unstable; urgency=low
 
   * HH-41793 fix message formating at debug
