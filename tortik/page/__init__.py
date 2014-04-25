@@ -8,6 +8,7 @@ from itertools import count
 from functools import wraps, partial
 from copy import copy
 import json
+import lxml.etree as etree
 import tornado.web
 import tornado.curl_httpclient
 import tornado.httpclient
@@ -15,6 +16,7 @@ from tornado import stack_context
 from tornado.options import options, define
 from tortik import TORTIK_BASE_PATH
 from tortik.util import decorate_all, make_list, real_ip, make_qs
+from tortik.util.dumper import Dumper
 from tortik.logger import PageLogger
 from tortik.util.async import AsyncGroup
 from tortik.util.parse import parse_xml, parse_json
@@ -135,9 +137,12 @@ class RequestHandler(tornado.web.RequestHandler):
         self.set_header('Content-Type', 'text/html; charset=utf-8')
         self.finish(RequestHandler.debug_loader.load('debug.html').generate(
             data=self.log.get_debug_info(),
+            output_data=self.get_data(),
             size=sys.getsizeof,
             get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
-            pretty_json=lambda x: json.dumps(json.loads(x), sort_keys=True, indent=4),
+            pretty_json=lambda x: json.dumps(x, sort_keys=True, indent=4, ensure_ascii=False),
+            pretty_xml=lambda x: etree.tostring(x, pretty_print=True, encoding=unicode),
+            dumper=Dumper.dump,
             format_exception=lambda x: "".join(traceback.format_exception(*x))
         ))
 
@@ -195,13 +200,17 @@ class RequestHandler(tornado.web.RequestHandler):
             self.log.request_complete(response)
 
         for req in requests:
+            if isinstance(req, (tuple, list)):
+                assert len(req) in (2, 3)
+                req = self.make_request(name=req[0], method='GET', full_url=req[1],
+                                        data=req[2] if len(req) == 3 else '')
             self.log.request_started(req)
             self.http_client.fetch(req, ag.add(partial(_on_fetch, name=req.name)))
 
-    def make_request(self, name, method, full_url=None, url_prefix=None, path='', data='', headers=None,
+    def make_request(self, name, method='GET', full_url=None, url_prefix=None, path='', data='', headers=None,
                      connect_timeout=0.5, request_timeout=2, follow_redirects=True):
 
-        if not ((full_url is None) ^ (url_prefix is None)):
+        if (full_url is None) == (url_prefix is None):
             raise TypeError('make_request required path/url_prefix arguments pair or full_url argument')
         if full_url is not None and path != '':
             raise TypeError("Can't combine full_url and path arguments")
@@ -210,25 +219,19 @@ class RequestHandler(tornado.web.RequestHandler):
         query = ''
         body = None
 
-        if not isinstance(data, dict) and full_url is not None:
-            data = urlparse.parse_qs(data)
-
         if full_url is not None:
             parsed_full_url = urlparse.urlsplit(full_url)
             scheme = parsed_full_url.scheme
             url_prefix = parsed_full_url.netloc
             path = parsed_full_url.path
-            if len(data):
-                updated_query = urlparse.parse_qs(parsed_full_url.query)
-                updated_query.update(data)
-                data = updated_query
-
-        data = make_qs(data) if isinstance(data, dict) else data
+            query = parsed_full_url.query
 
         if method in ['GET', 'HEAD']:
-            query = data
+            parsed_query = urlparse.parse_qs(query)
+            parsed_query.update(data if isinstance(data, dict) else urlparse.parse_qs(data))
+            query = make_qs(parsed_query)
         else:
-            body = data
+            body = make_qs(data) if isinstance(data, dict) else data
 
         headers = {} if headers is None else headers
 
