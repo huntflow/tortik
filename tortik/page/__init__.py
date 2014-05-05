@@ -135,6 +135,9 @@ class RequestHandler(tornado.web.RequestHandler):
 
     def finish_with_debug(self):
         self.set_header('Content-Type', 'text/html; charset=utf-8')
+        if self.debug_type == _DEBUG_ALL:
+            self.set_status(200)
+
         self.finish(RequestHandler.debug_loader.load('debug.html').generate(
             data=self.log.get_debug_info(),
             output_data=self.get_data(),
