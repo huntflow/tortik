@@ -30,7 +30,10 @@ class Dumper():
 
             return '<span class="dumper__collapser"></span>{<ul class="dumper-collapsible"><li class="dumper-item">' \
                    + ',</li><li class="dumper-item">'.join(map(lambda (x, y):
-                                                               '<span class="dumper-item__prop">' + str(x) + '</span>: '
+                                                               '<span class="dumper-item-prop">'
+                                                               + '<span class="dumper-item-prop__q">"</span>'
+                                                               + str(x)
+                                                               + '<span class="dumper-item-prop__q">"</span></span>: '
                                                                + self.make_dump(y), obj.items())) + \
                    '</li></ul>}'
         elif isinstance(obj, bool):

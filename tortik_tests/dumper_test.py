@@ -10,7 +10,12 @@ class DumperTestCase(unittest.TestCase):
         a = {'a': 123}
         a['b'] = a
         expected = ('<span class="dumper__collapser"></span>{<ul class="dumper-collapsible"><li class="dumper-item">'
-                    '<span class="dumper-item__prop">a</span>: <span class="dumper-item__num">123</span>,</li>'
-                    '<li class="dumper-item"><span class="dumper-item__prop">b</span>: '
+                    '<span class="dumper-item-prop">'
+                    '<span class="dumper-item-prop__q">"</span>a<span class="dumper-item-prop__q">"</span>'
+                    '</span>: <span class="dumper-item__num">123</span>,</li>'
+                    '<li class="dumper-item">'
+                    '<span class="dumper-item-prop">'
+                    '<span class="dumper-item-prop__q">"</span>b<span class="dumper-item-prop__q">"</span>'
+                    '</span>: '
                     '<span class="dumper-item__string">"&lt;circular reference&gt;"</span></li></ul>}')
         self.assertEqual(expected, Dumper.dump(a))
