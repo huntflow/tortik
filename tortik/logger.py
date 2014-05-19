@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
 import time
 import logging
-
+import logging.handlers
 from collections import OrderedDict
+from datetime import datetime
+
+from tornado.options import options, define
 
 LOGGER_NAME = 'tortik'
 _SKIP_EVENT = "skip_event"
 
 tortik_log = logging.getLogger(LOGGER_NAME)
+
+
+define('tortik_logformat', default='[%(process)s %(asctime)s %(levelname)s %(name)s] %(message)s')
 
 
 class RequestIdFilter(logging.Filter):
@@ -166,10 +171,10 @@ class PageLogger(logging.LoggerAdapter):
 
 
 def configure(logfile=None):
-    logging.getLogger("tornado").setLevel(logging.WARNING)
-    page_logger = tortik_log
-
     if logfile:
-        page_logger.addHandler(logging.FileHandler(logfile))
-    page_logger.addFilter(RequestIdFilter())
-    page_logger.setLevel(logging.DEBUG)
+        handler = logging.handlers.WatchedFileHandler(logfile)
+        handler.setFormatter(logging.Formatter(options.tortik_logformat))
+        tortik_log.addHandler(handler)
+
+    tortik_log.addFilter(RequestIdFilter())
+    tortik_log.setLevel(logging.DEBUG)

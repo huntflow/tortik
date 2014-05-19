@@ -47,8 +47,9 @@ setup(
     name="tortik",
     version=version,
     description="Tortik - python tornado framework",
-    long_description=open("README.md").read(),
+    long_description=open("README.rst").read(),
     url="https://github.com/hhru/tortik",
+    download_url='https://github.com/hhru/tortik/tarball/{}'.format(version),
     packages=find_packages(exclude=['tortik_tests', 'tortik_tests.*']),
     package_data={
         "tortik": find_package_data("tortik", "templates"),
