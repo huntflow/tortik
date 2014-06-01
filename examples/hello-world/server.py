@@ -31,19 +31,16 @@ def preprocessor(handler, callback):
 
 
 def postprocessor(handler, data, callback):
-
     def handle_request():
         handler.log.info('Log from postprocessor')
-        processed_data = data.replace('Good buy', '{} world'.format(handler.hello))  # postprocess results
-        callback(handler, processed_data)
+        added_data = handler.get_data()
+        processed_data = map(lambda x: x.get('header_image'), added_data.get('steam', {}).get('large_capsules', []))
+        callback(handler, {'images': processed_data})
 
     IOLoop.instance().add_callback(handle_request)  # emulate async call
 
 
 class MainHandler(RequestHandler):
-
-    hello = None
-
     preprocessors = [
         preprocessor
     ]
@@ -52,10 +49,17 @@ class MainHandler(RequestHandler):
     ]
 
     def get(self):
-        self.complete('Good buy!')
+        self.fetch_requests([
+            ('steam', 'http://store.steampowered.com/api/featured/'),
+            ('hhapi', 'https://api.hh.ru/dictionaries', {'locale': 'EN'})
+        ], callback=self.complete)
 
 
 class ExceptionHandler(MainHandler):
+    postprocessors = [
+
+    ]
+
     def get(self):
         test = 1 / 0  # ZeroDivisionError
 
