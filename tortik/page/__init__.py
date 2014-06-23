@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 import sys
 import urlparse
 import traceback
@@ -8,18 +7,21 @@ from itertools import count
 from functools import wraps, partial
 from copy import copy
 import json
+
 import lxml.etree as etree
 import tornado.web
 import tornado.curl_httpclient
 import tornado.httpclient
 from tornado import stack_context
 from tornado.options import options, define
-from tortik import TORTIK_BASE_PATH
+from jinja2 import Environment, PackageLoader
+
 from tortik.util import decorate_all, make_list, real_ip, make_qs
-from tortik.util.dumper import Dumper
+from tortik.util.dumper import dump
 from tortik.logger import PageLogger
 from tortik.util.async import AsyncGroup
 from tortik.util.parse import parse_xml, parse_json
+
 
 stats = count()
 
@@ -70,9 +72,13 @@ class RequestHandler(tornado.web.RequestHandler):
             self.debug_type = _DEBUG_NONE
 
         if self.debug_type != _DEBUG_NONE and not hasattr(RequestHandler, 'debug_loader'):
-            RequestHandler.debug_loader = self.create_template_loader(
-                os.path.join(TORTIK_BASE_PATH, 'templates')
-            )
+            environment = Environment(autoescape=True,
+                                      loader=PackageLoader('tortik', 'templates'),
+                                      extensions=['jinja2.ext.autoescape'],
+                                      auto_reload=options.debug)
+
+            environment.filters['split'] = lambda x, y: x.split(y)
+            RequestHandler.debug_loader = environment
 
         self.error_detected = False
 
@@ -138,14 +144,14 @@ class RequestHandler(tornado.web.RequestHandler):
         if self.debug_type == _DEBUG_ALL:
             self.set_status(200)
 
-        self.finish(RequestHandler.debug_loader.load('debug.html').generate(
+        self.finish(RequestHandler.debug_loader.get_template('debug.html').render(
             data=self.log.get_debug_info(),
             output_data=self.get_data(),
             size=sys.getsizeof,
             get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
             pretty_json=lambda x: json.dumps(x, sort_keys=True, indent=4, ensure_ascii=False),
             pretty_xml=lambda x: etree.tostring(x, pretty_print=True, encoding=unicode),
-            dumper=Dumper.dump,
+            dumper=dump,
             format_exception=lambda x: "".join(traceback.format_exception(*x))
         ))
 

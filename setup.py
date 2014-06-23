@@ -55,5 +55,5 @@ setup(
         "tortik": find_package_data("tortik", "templates"),
     },
     cmdclass={'test': TestCommand, 'build_py': BuildHook},
-    requires=['tornado', 'lxml', 'nose'],
+    requires=['tornado', 'lxml', 'nose', 'jinja2'],
 )
