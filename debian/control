@@ -12,6 +12,7 @@ Depends: ${python:Depends},
   python-pkg-resources,
   python-pycurl,
   python-lxml,
+  python-jinja2,
   python-tornado (>= 2.0+hh17)
 Recommends:
 Suggests:
