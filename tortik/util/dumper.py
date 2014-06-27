@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from tornado.httputil import HTTPHeaders
 
 
 def dump(obj):
@@ -36,3 +37,34 @@ def dump(obj):
             return primitive(repr(item), 'string')
 
     return _make_dump(obj)
+
+
+def request_to_curl_string(request):
+    def _escape_apos(string):
+        return string.replace("'", "'\"'\"'")
+
+    try:
+        if request.body:
+            request.body.decode('ascii')
+        is_binary_data = False
+    except UnicodeError:
+        is_binary_data = True
+
+    curl_headers = HTTPHeaders(request.headers)
+    if request.body and 'Content-Length' not in curl_headers:
+        curl_headers['Content-Length'] = len(request.body)
+
+    if is_binary_data:
+        curl_echo_data = "echo -e {0} |".format(repr(request.body))
+        curl_data_string = '--data-binary @-'
+    else:
+        curl_echo_data = ''
+        curl_data_string = "--data '{0}'".format(_escape_apos(request.body)) if request.body else ''
+
+    return "{echo} curl -X {method} '{url}' {headers} {data}".format(
+        echo=curl_echo_data,
+        method=request.method,
+        url=request.url,
+        headers=' '.join("-H '{0}: {1}'".format(k, _escape_apos(str(v))) for k, v in curl_headers.iteritems()),
+        data=curl_data_string
+    ).strip()

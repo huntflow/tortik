@@ -183,6 +183,22 @@
             width: 0;
             color: transparent;
         }
+
+        .copy-as-curl {
+            margin-top: 10px;
+        }
+
+            .copy-as-curl__title {
+                color: #666;
+                font-size: .8em;
+                border-bottom: 1px dotted #666;
+                cursor: pointer;
+            }
+
+            .copy-as-curl__data {
+                background: white;
+                padding: 5px;
+            }
     </style>
 </head>
 <body>
@@ -204,6 +220,12 @@
             <div class="entry-data g-hidden">
                 <a class="entry-data__link" href="{{ entry['request']['url'] }}">{{ entry['request']['url'] }}</a>
                 <br>
+                <div class="copy-as-curl">
+                    <span class="copy-as-curl__title">copy as CURL</span>
+                        <pre class="copy-as-curl__data g-hidden">
+                            {{- entry['request']['curl'] -}}
+                        </pre>
+                </div>
                 <div class="ib">
                     <table class="entry-data-table">
                         <tr><th colspan="2">Request Params</th></tr>
@@ -295,6 +317,21 @@
                 }
             }, false);
         });
+
+        elements = document.querySelectorAll('.copy-as-curl');
+        Array.prototype.forEach.call(elements, function(entry) {
+            var block = $('.copy-as-curl__data', entry);
+            $('.copy-as-curl__title', entry).addEventListener('click', function() {
+                if (hasClass(block, 'g-hidden')) {
+                    removeClass(block, 'g-hidden');
+                    select(block);
+                } else {
+                    addClass(block, 'g-hidden');
+                }
+            }, false);
+        });
+
+
     }, false);
 
     // Click handler for collapsing and expanding objects and arrays
@@ -317,6 +354,21 @@
             collapsible = collapsible.nextSibling;
         }
         collapsible.classList.toggle('collapsed');
+    }
+
+    function select(entry) {
+        var range;
+        if (document.body.createTextRange) {
+            range = document.body.createTextRange();
+            range.moveToElementText(entry);
+            range.select();
+        } else if (window.getSelection) {
+            var selection = window.getSelection();
+            range = document.createRange();
+            range.selectNode(entry);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
     }
 
     // collapse with event delegation

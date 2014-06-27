@@ -22,8 +22,7 @@
                 {%- for name, item in obj.value.iteritems() -%}
                     <li class="dumper-item">
                         <span class="dumper-item-prop">
-                            <span class="dumper-item-prop__q">"</span>
-                            {{ name }}<span class="dumper-item-prop__q">"</span></span>: {{ render_dump(item) -}}
+                            <span class="dumper-item-prop__q">"</span>{{ name }}<span class="dumper-item-prop__q">"</span></span>: {{ render_dump(item) -}}
                         {%- if not loop.last -%},{%- endif -%}
                     </li>
                 {%- endfor -%}
