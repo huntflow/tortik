@@ -14,6 +14,7 @@ import tornado.curl_httpclient
 import tornado.httpclient
 from tornado import stack_context
 from tornado.options import options, define
+from tornado.escape import to_unicode
 from jinja2 import Environment, PackageLoader
 
 from tortik.util import decorate_all, make_list, real_ip, make_qs
@@ -151,6 +152,7 @@ class RequestHandler(tornado.web.RequestHandler):
             get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
             pretty_json=lambda x: json.dumps(x, sort_keys=True, indent=4, ensure_ascii=False),
             pretty_xml=lambda x: etree.tostring(x, pretty_print=True, encoding=unicode),
+            to_unicode=to_unicode,
             dumper=dump,
             format_exception=lambda x: "".join(traceback.format_exception(*x))
         ))

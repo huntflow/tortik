@@ -278,7 +278,7 @@
                         {{ entry['response']['body'].encode('hex') }}
                     {% else %}
                         <div class="data-html">
-                            {{ entry['response']['body'] }}
+                            {{ to_unicode(entry['response']['body'])|safe }}
                         </div>
                     {% endif %}
                 </div>
