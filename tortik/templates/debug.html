@@ -184,6 +184,10 @@
             color: transparent;
         }
 
+        .entry-data-timings {
+            margin-top: 10px;
+        }
+
         .copy-as-curl {
             margin-top: 10px;
         }
@@ -220,6 +224,16 @@
             <div class="entry-data g-hidden">
                 <a class="entry-data__link" href="{{ entry['request']['url'] }}">{{ entry['request']['url'] }}</a>
                 <br>
+                {% if entry.time_info %}
+                <div class="entry-data-timings">
+                    {% set divider = joiner(', ') %}
+                    {% for key in ['queue', 'namelookup', 'connect', 'appconnect', 'pretransfer', 'starttransfer', 'total', 'redirect'] -%}
+                        {%- if key in entry.time_info -%}
+                            {{- divider() }}<span>{{ key }}={{ "%.3f"|format(entry.time_info.get(key)*1000) }}</span>
+                        {%- endif -%}
+                    {%- endfor %}
+                </div>
+                {% endif %}
                 <div class="copy-as-curl">
                     <span class="copy-as-curl__title">copy as CURL</span>
                         <pre class="copy-as-curl__data g-hidden">
