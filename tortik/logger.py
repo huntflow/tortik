@@ -115,6 +115,7 @@ class PageLogger(logging.LoggerAdapter):
                 event.update({
                     'completed': now,
                     'took': now - event['started'],
+                    'time_info': getattr(resp, 'time_info', None),
                     'response': {
                         'code': resp.code,
                         'headers': resp.headers,
@@ -129,8 +130,8 @@ class PageLogger(logging.LoggerAdapter):
         elif resp.code >= 500:
             level = logging.ERROR
 
-        self.log(level,
-                 "Complete {0} {1} {2}".format(resp.code, resp.request.method, resp.request.url),
+        self.log(level, "Complete {0} {1} {2} in {3}ms".format(resp.code, resp.request.method, resp.request.url,
+                                                               int(resp.request_time * 1000.0)),
                  extra={_SKIP_EVENT: True})
 
     def stage_started(self, stage_name):

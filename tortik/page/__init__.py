@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import os
 import sys
+import time
 import urlparse
 import traceback
+import hashlib
+import random
 from itertools import count
-from functools import wraps, partial
+from functools import partial
 from copy import copy
 import json
 
@@ -12,9 +16,9 @@ import lxml.etree as etree
 import tornado.web
 import tornado.curl_httpclient
 import tornado.httpclient
-from tornado import stack_context
 from tornado.options import options, define
 from tornado.escape import to_unicode
+import tornado.gen
 from jinja2 import Environment, PackageLoader
 
 from tortik.util import decorate_all, make_list, real_ip, make_qs
@@ -23,8 +27,6 @@ from tortik.logger import PageLogger
 from tortik.util.async import AsyncGroup
 from tortik.util.parse import parse_xml, parse_json
 
-
-stats = count()
 
 define('debug_password', default=None, type=str, help='Password for debug')
 define('debug', default=True, type=bool, help='Debug mode')
@@ -35,26 +37,15 @@ _DEBUG_ALL = "all"
 _DEBUG_ONLY_ERRORS = "only_errors"
 _DEBUG_NONE = "none"
 
+stats = count()
 
-def preprocessors(method):
-    @wraps(method)
-    def wrapper(handler, *args, **kwargs):
-        with stack_context.ExceptionStackContext(handler._handle_exception):
-            def finished_cb():
-                method(handler, *args, **kwargs)
 
-            ag = AsyncGroup(finished_cb, log=handler.log.debug, name='preprocessors')
-            for preprocessor in handler.preprocessors:
-                preprocessor(handler, ag.add_empty_cb())
-
-            ag.try_finish()
-
-    return wrapper
+def _gen_requestid():
+    return hashlib.md5("{}{}{}".format(os.getpid(), stats.next(), random.random())).hexdigest()
 
 
 class RequestHandler(tornado.web.RequestHandler):
     decorators = [
-        (preprocessors, 'preprocessors'),
         (tornado.web.asynchronous, 'asynchronous'),  # should be the last
     ]
     __metaclass__ = decorate_all(decorators)
@@ -83,7 +74,7 @@ class RequestHandler(tornado.web.RequestHandler):
 
         self.error_detected = False
 
-        self.request_id = self.request.headers.get('X-Request-Id', str(stats.next()))
+        self.request_id = self.request.headers.get('X-Request-Id', _gen_requestid())
 
         self.log = PageLogger(self.request, self.request_id, (self.debug_type != _DEBUG_NONE),
                               handler_name=(type(self).__module__ + '.' + type(self).__name__))
@@ -95,6 +86,13 @@ class RequestHandler(tornado.web.RequestHandler):
         self.postprocessors = copy(self.postprocessors) if hasattr(self, 'postprocessors') else []
 
         self._extra_data = {}
+
+    @tornado.gen.coroutine
+    def prepare(self):
+        if self.preprocessors:
+            start_time = time.time()
+            yield map(lambda x: tornado.gen.Task(x, self), self.preprocessors)
+            self.log.debug("Preprocessors completed in %.2fms", (time.time() - start_time)*1000.)
 
     @staticmethod
     def get_global_http_client():
@@ -115,30 +113,26 @@ class RequestHandler(tornado.web.RequestHandler):
     def compute_etag(self):
         return None
 
-    def on_finish(self):  # tornado 2.2+
+    def on_finish(self):
         self.log.complete_logging(self.get_status())
 
-    def _handle_exception(self, type, value, tb):
-        if self.error_detected is True:  # prevent error infinite loop
-            self.log.error("Exception already detected")
-            if not self._finished:
-                self.finish()
-            return
-
-        self.error_detected = True
+    def write_error(self, status_code, **kwargs):
         if self.debug_type in [_DEBUG_ALL, _DEBUG_ONLY_ERRORS]:
-            self.log.error("Uncaught exception %s\n%r", self._request_summary(),
-                           self.request, exc_info=(type, value, tb))
+            if 'exc_info' in kwargs:
+                type, value, tb = kwargs['exc_info']
+                self.log.error("Uncaught exception %s\n%r", self._request_summary(),
+                               self.request, exc_info=(type, value, tb))
 
             if self._finished:
                 return
 
-            response_code = value.status_code if isinstance(value, tornado.web.HTTPError) else 500
-            self.set_status(response_code)
-            self.log.complete_logging(response_code)
+            self.set_status(status_code)
+            self.log.complete_logging(status_code)
             self.finish_with_debug()
 
             return True
+        else:
+            super(RequestHandler, self).write_error(status_code, kwargs)
 
     def finish_with_debug(self):
         self.set_header('Content-Type', 'text/html; charset=utf-8')
@@ -158,29 +152,28 @@ class RequestHandler(tornado.web.RequestHandler):
         ))
 
     def complete(self, output_data=None):
-        with stack_context.ExceptionStackContext(self._handle_exception):
-            def finished_cb(handler, data):
-                handler.log.complete_logging(handler.get_status())
-                if handler.debug_type == _DEBUG_ALL:
-                    self.finish_with_debug()
-                    return
+        def finished_cb(handler, data):
+            handler.log.complete_logging(handler.get_status())
+            if handler.debug_type == _DEBUG_ALL:
+                self.finish_with_debug()
+                return
 
-                self.finish(data)
+            self.finish(data)
 
-            if self.postprocessors:
-                last = len(self.postprocessors) - 1
+        if self.postprocessors:
+            last = len(self.postprocessors) - 1
 
-                def add_cb(index):
-                    if index == last:
-                        return finished_cb
-                    else:
-                        def _cb(handler, data):
-                            self.postprocessors[index + 1](handler, data, add_cb(index + 1))
-                        return _cb
+            def add_cb(index):
+                if index == last:
+                    return finished_cb
+                else:
+                    def _cb(handler, data):
+                        self.postprocessors[index + 1](handler, data, add_cb(index + 1))
+                    return _cb
 
-                self.postprocessors[0](self, output_data, add_cb(0))
-            else:
-                finished_cb(self, output_data)
+            self.postprocessors[0](self, output_data, add_cb(0))
+        else:
+            finished_cb(self, output_data)
 
     def fetch_requests(self, requests, callback=None, stage='page'):
         self.log.stage_started(stage)
