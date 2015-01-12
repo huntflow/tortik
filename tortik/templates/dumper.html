@@ -1,0 +1,36 @@
+{%- macro render_dump(obj) -%}
+    {%- if obj.type == 'array' -%}
+        {%- if obj.value|length == 0 -%}
+            [ ]
+        {%- else -%}
+            <span class="dumper__collapser"></span>[
+            <ul class="dumper-collapsible">
+                {% for item in obj.value %}
+                <li class="dumper-item">
+                    {{- render_dump(item) -}}
+                    {%- if not loop.last -%},{%- endif -%}
+                </li>
+                {% endfor %}
+            </ul>]
+        {%- endif -%}
+    {%- elif obj.type == 'dict' -%}
+        {%- if obj.value|length == 0 -%}
+            { }
+        {%- else -%}
+            <span class="dumper__collapser"></span>
+            {<ul class="dumper-collapsible">
+                {%- for name, item in obj.value.iteritems() -%}
+                    <li class="dumper-item">
+                        <span class="dumper-item-prop">
+                            <span class="dumper-item-prop__q">"</span>{{ name }}<span class="dumper-item-prop__q">"</span></span>: {{ render_dump(item) -}}
+                        {%- if not loop.last -%},{%- endif -%}
+                    </li>
+                {%- endfor -%}
+            </ul>}
+        {%- endif -%}
+    {%- elif obj.type == 'string' -%}
+        <span class="dumper-item__{{ obj.type }}">"{{ obj.value }}"</span>
+    {%- elif obj.type == 'bool' or obj.type == 'number' or obj.type == 'null' -%}
+        <span class="dumper-item__{{ obj.type }}">{{ obj.value }}</span>
+    {%- endif -%}
+{%- endmacro -%}

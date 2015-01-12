@@ -1,57 +1,70 @@
 # -*- coding: utf-8 -*-
+from tornado.httputil import HTTPHeaders
 
-import json
 
+def dump(obj):
+    refs = set()
 
-class Dumper():
-    def __init__(self):
-        self._refs = set()
+    def primitive(value, ptype='string'):
+        return dict(type=ptype, value=value)
 
-    @classmethod
-    def dump(cls, obj):
-        return cls().make_dump(obj)
+    def _make_dump(item):
+        if isinstance(item, list):
+            if len(item) == 0:
+                return dict(type='array', value=[])
+            if id(item) in refs:
+                return primitive('<circular reference>')
 
-    def make_dump(self, obj):
-        if isinstance(obj, list):
-            if len(obj) == 0:
-                return '[ ]'
-            if id(obj) in self._refs:
-                return self._dec_with_span(self._js_string('<circular reference>'), 'string')
-            self._refs.add(id(obj))
+            refs.add(id(item))
+            return dict(type='array', value=map(lambda x: _make_dump(x), item))
+        elif isinstance(item, dict):
+            if not item:
+                return dict(type='dict', value=dict())
+            if id(item) in refs:
+                return primitive('<circular reference>')
+            refs.add(id(item))
 
-            return '<span class="dumper__collapser"></span>[<ul class="dumper-collapsible"><li class="dumper-item">' \
-                   + ',</li><li class="dumper-item">'.join(map(lambda x: self.make_dump(x), obj)) + '</li></ul>]'
-        elif isinstance(obj, dict):
-            if not obj:
-                return '{ }'
-            if id(obj) in self._refs:
-                return self._dec_with_span(self._js_string('<circular reference>'), 'string')
-            self._refs.add(id(obj))
-
-            return '<span class="dumper__collapser"></span>{<ul class="dumper-collapsible"><li class="dumper-item">' \
-                   + ',</li><li class="dumper-item">'.join(map(lambda (x, y):
-                                                               '<span class="dumper-item-prop">'
-                                                               + '<span class="dumper-item-prop__q">"</span>'
-                                                               + str(x)
-                                                               + '<span class="dumper-item-prop__q">"</span></span>: '
-                                                               + self.make_dump(y), obj.items())) + \
-                   '</li></ul>}'
-        elif isinstance(obj, bool):
-            return self._dec_with_span('true' if obj else 'false', 'bool')
-        elif isinstance(obj, basestring):
-            return self._dec_with_span(self._js_string(obj), 'string')
-        elif isinstance(obj, (int, float)):
-            return self._dec_with_span(str(obj), 'num')
-        elif obj is None:
-            return self._dec_with_span('null', 'null')
+            return dict(type='dict', value=dict((x, _make_dump(y)) for x, y in item.items()))
+        elif isinstance(item, bool):
+            return primitive('true' if item else 'false', 'bool')
+        elif isinstance(item, basestring):
+            return primitive(item)
+        elif isinstance(item, (int, float)):
+            return primitive(item, 'number')
+        elif item is None:
+            return primitive('null', 'null')
         else:
-            return self._dec_with_span(self._js_string(repr(obj)), 'string')
+            return primitive(repr(item), 'string')
 
-    def _dec_with_span(self, val, cls):
-        return '<span class="dumper-item__' + cls + '">' + val + '</span>'
+    return _make_dump(obj)
 
-    def _html_encode(self, val):
-        return val.replace('&', '&amp;').replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;')
 
-    def _js_string(self, val):
-        return '"' + self._html_encode(json.dumps(val, ensure_ascii=False)[1:-1]) + '"'
+def request_to_curl_string(request):
+    def _escape_apos(string):
+        return string.replace("'", "'\"'\"'")
+
+    try:
+        if request.body:
+            request.body.decode('ascii')
+        is_binary_data = False
+    except UnicodeError:
+        is_binary_data = True
+
+    curl_headers = HTTPHeaders(request.headers)
+    if request.body and 'Content-Length' not in curl_headers:
+        curl_headers['Content-Length'] = len(request.body)
+
+    if is_binary_data:
+        curl_echo_data = "echo -e {0} |".format(repr(request.body))
+        curl_data_string = '--data-binary @-'
+    else:
+        curl_echo_data = ''
+        curl_data_string = "--data '{0}'".format(_escape_apos(request.body)) if request.body else ''
+
+    return "{echo} curl -X {method} '{url}' {headers} {data}".format(
+        echo=curl_echo_data,
+        method=request.method,
+        url=request.url,
+        headers=' '.join("-H '{0}: {1}'".format(k, _escape_apos(str(v))) for k, v in curl_headers.iteritems()),
+        data=curl_data_string
+    ).strip()

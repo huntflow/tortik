@@ -7,6 +7,8 @@ from datetime import datetime
 
 from tornado.options import options, define
 
+from tortik.util.dumper import request_to_curl_string
+
 LOGGER_NAME = 'tortik'
 _SKIP_EVENT = "skip_event"
 
@@ -97,7 +99,8 @@ class PageLogger(logging.LoggerAdapter):
                     'url': request.url,
                     'method': request.method,
                     'headers': request.headers,
-                    'data': request.body
+                    'data': request.body,
+                    'curl': request_to_curl_string(request)
                 }
             }
             self.debug_info[request] = event
