@@ -1,3 +1,10 @@
+python-tortik (0.1.22) unstable; urgency=low
+
+  * jinja2 debug
+  * tornado 3.1+
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Mon, 12 Jan 2015 09:11:05 +0400
+
 python-tortik (0.1.10) unstable; urgency=low
 
   * HH-42822 return 200 for debug, add prop name quotes for json dump
