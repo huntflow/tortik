@@ -1,3 +1,9 @@
+python-tortik (0.1.24) unstable; urgency=low
+
+  * sources update
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Sun, 8 Feb 2015 21:30:05 +0400
+
 python-tortik (0.1.23) unstable; urgency=low
 
   * use default simple http client
