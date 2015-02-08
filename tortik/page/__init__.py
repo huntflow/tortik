@@ -14,7 +14,6 @@ import json
 
 import lxml.etree as etree
 import tornado.web
-import tornado.curl_httpclient
 import tornado.httpclient
 from tornado.options import options, define
 from tornado.escape import to_unicode
@@ -85,6 +84,8 @@ class RequestHandler(tornado.web.RequestHandler):
         self.preprocessors = copy(self.preprocessors) if hasattr(self, 'preprocessors') else []
         self.postprocessors = copy(self.postprocessors) if hasattr(self, 'postprocessors') else []
 
+        self.log.info('Using http client: %s' % repr(self.http_client))
+
         self._extra_data = {}
 
     @tornado.gen.coroutine
@@ -97,8 +98,9 @@ class RequestHandler(tornado.web.RequestHandler):
     @staticmethod
     def get_global_http_client():
         if not hasattr(RequestHandler, '_http_client'):
-            RequestHandler._http_client = tornado.curl_httpclient.CurlAsyncHTTPClient(
+            RequestHandler._http_client = tornado.httpclient.AsyncHTTPClient(
                 max_clients=options.tortik_max_clients)
+
         return RequestHandler._http_client
 
     def initialize_http_client(self):

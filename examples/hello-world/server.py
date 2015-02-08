@@ -8,6 +8,7 @@ from os import path
 import urllib
 
 import tornado.web
+import tornado.httpclient
 from tornado.ioloop import IOLoop
 from tornado.options import options
 
@@ -81,6 +82,12 @@ if __name__ == '__main__':
     options.define('port', type=int, default=8888, help='Bind port')
     options.parse_config_file(path.join(path.dirname(__file__), 'options.cfg'), final=False)
     options.parse_command_line()
+
+    # this is how http client could be configured
+    tornado.httpclient.AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient", defaults={
+        'user_agent': ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/537.1 (KHTML, like Gecko)"
+                       " Chrome/21.0.1180.89 Safari/537.1")
+    })
 
     address = options.host
     port = options.port
