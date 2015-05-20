@@ -13,4 +13,4 @@ def __parse_version_from_changelog():
     except (IOError, AttributeError):
         return 'unknown_version'
 
-version = __parse_version_from_changelog()
+version = 0.1.26
