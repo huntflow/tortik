@@ -214,7 +214,7 @@ class RequestHandler(tornado.web.RequestHandler):
             self.http_client.fetch(req, ag.add(partial(_on_fetch, name=req.name)))
 
     def make_request(self, name, method='GET', full_url=None, url_prefix=None, path='', data='', headers=None,
-                     connect_timeout=0.5, request_timeout=2, follow_redirects=True, **kwargs):
+                     connect_timeout=1, request_timeout=2, follow_redirects=True, **kwargs):
 
         if (full_url is None) == (url_prefix is None):
             raise TypeError('make_request required path/url_prefix arguments pair or full_url argument')
@@ -232,7 +232,7 @@ class RequestHandler(tornado.web.RequestHandler):
             path = parsed_full_url.path
             query = parsed_full_url.query
 
-        if method in ['GET', 'HEAD']:
+        if method in ['GET', 'HEAD', 'DELETE']:
             parsed_query = urlparse.parse_qs(query)
             parsed_query.update(data if isinstance(data, dict) else urlparse.parse_qs(data))
             query = make_qs(parsed_query)
