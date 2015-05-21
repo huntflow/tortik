@@ -2,26 +2,30 @@
 
 import os
 import sys
+import time
 import urlparse
 import traceback
+import hashlib
+import random
 from itertools import count
-from functools import wraps, partial
+from functools import partial
 from copy import copy
 import json
+
 import lxml.etree as etree
 import tornado.web
-import tornado.curl_httpclient
 import tornado.httpclient
-from tornado import stack_context
 from tornado.options import options, define
-from tortik import TORTIK_BASE_PATH
+from tornado.escape import to_unicode
+import tornado.gen
+from jinja2 import Environment, PackageLoader
+
 from tortik.util import decorate_all, make_list, real_ip, make_qs
-from tortik.util.dumper import Dumper
+from tortik.util.dumper import dump
 from tortik.logger import PageLogger
 from tortik.util.async import AsyncGroup
 from tortik.util.parse import parse_xml, parse_json
 
-stats = count()
 
 define('debug_password', default=None, type=str, help='Password for debug')
 define('debug', default=True, type=bool, help='Debug mode')
@@ -32,26 +36,15 @@ _DEBUG_ALL = "all"
 _DEBUG_ONLY_ERRORS = "only_errors"
 _DEBUG_NONE = "none"
 
+stats = count()
 
-def preprocessors(method):
-    @wraps(method)
-    def wrapper(handler, *args, **kwargs):
-        with stack_context.ExceptionStackContext(handler._handle_exception):
-            def finished_cb():
-                method(handler, *args, **kwargs)
 
-            ag = AsyncGroup(finished_cb, log=handler.log.debug, name='preprocessors')
-            for preprocessor in handler.preprocessors:
-                preprocessor(handler, ag.add_empty_cb())
-
-            ag.try_finish()
-
-    return wrapper
+def _gen_requestid():
+    return hashlib.md5("{}{}{}".format(os.getpid(), stats.next(), random.random())).hexdigest()
 
 
 class RequestHandler(tornado.web.RequestHandler):
     decorators = [
-        (preprocessors, 'preprocessors'),
         (tornado.web.asynchronous, 'asynchronous'),  # should be the last
     ]
     __metaclass__ = decorate_all(decorators)
@@ -70,13 +63,17 @@ class RequestHandler(tornado.web.RequestHandler):
             self.debug_type = _DEBUG_NONE
 
         if self.debug_type != _DEBUG_NONE and not hasattr(RequestHandler, 'debug_loader'):
-            RequestHandler.debug_loader = self.create_template_loader(
-                os.path.join(TORTIK_BASE_PATH, 'templates')
-            )
+            environment = Environment(autoescape=True,
+                                      loader=PackageLoader('tortik', 'templates'),
+                                      extensions=['jinja2.ext.autoescape'],
+                                      auto_reload=options.debug)
+
+            environment.filters['split'] = lambda x, y: x.split(y)
+            RequestHandler.debug_loader = environment
 
         self.error_detected = False
 
-        self.request_id = self.request.headers.get('X-Request-Id', str(stats.next()))
+        self.request_id = self.request.headers.get('X-Request-Id', _gen_requestid())
 
         self.log = PageLogger(self.request, self.request_id, (self.debug_type != _DEBUG_NONE),
                               handler_name=(type(self).__module__ + '.' + type(self).__name__))
@@ -87,13 +84,23 @@ class RequestHandler(tornado.web.RequestHandler):
         self.preprocessors = copy(self.preprocessors) if hasattr(self, 'preprocessors') else []
         self.postprocessors = copy(self.postprocessors) if hasattr(self, 'postprocessors') else []
 
+        self.log.info('Using http client: %s' % repr(self.http_client))
+
         self._extra_data = {}
+
+    @tornado.gen.coroutine
+    def prepare(self):
+        if self.preprocessors:
+            start_time = time.time()
+            yield map(lambda x: tornado.gen.Task(x, self), self.preprocessors)
+            self.log.debug("Preprocessors completed in %.2fms", (time.time() - start_time)*1000.)
 
     @staticmethod
     def get_global_http_client():
         if not hasattr(RequestHandler, '_http_client'):
-            RequestHandler._http_client = tornado.curl_httpclient.CurlAsyncHTTPClient(
+            RequestHandler._http_client = tornado.httpclient.AsyncHTTPClient(
                 max_clients=options.tortik_max_clients)
+
         return RequestHandler._http_client
 
     def initialize_http_client(self):
@@ -108,71 +115,67 @@ class RequestHandler(tornado.web.RequestHandler):
     def compute_etag(self):
         return None
 
-    def on_finish(self):  # tornado 2.2+
+    def on_finish(self):
         self.log.complete_logging(self.get_status())
 
-    def _handle_exception(self, type, value, tb):
-        if self.error_detected is True:  # prevent error infinite loop
-            self.log.error("Exception already detected")
-            if not self._finished:
-                self.finish()
-            return
-
-        self.error_detected = True
+    def write_error(self, status_code, **kwargs):
         if self.debug_type in [_DEBUG_ALL, _DEBUG_ONLY_ERRORS]:
-            self.log.error("Uncaught exception %s\n%r", self._request_summary(),
-                           self.request, exc_info=(type, value, tb))
+            if 'exc_info' in kwargs:
+                type, value, tb = kwargs['exc_info']
+                self.log.error("Uncaught exception %s\n%r", self._request_summary(),
+                               self.request, exc_info=(type, value, tb))
 
             if self._finished:
                 return
 
-            response_code = value.status_code if isinstance(value, tornado.web.HTTPError) else 500
-            self.set_status(response_code)
-            self.log.complete_logging(response_code)
+            self.set_status(status_code)
+            self.log.complete_logging(status_code)
             self.finish_with_debug()
 
             return True
+        else:
+            super(RequestHandler, self).write_error(status_code, kwargs)
 
     def finish_with_debug(self):
         self.set_header('Content-Type', 'text/html; charset=utf-8')
         if self.debug_type == _DEBUG_ALL:
             self.set_status(200)
 
-        self.finish(RequestHandler.debug_loader.load('debug.html').generate(
+        self.finish(RequestHandler.debug_loader.get_template('debug.html').render(
             data=self.log.get_debug_info(),
             output_data=self.get_data(),
             size=sys.getsizeof,
             get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
             pretty_json=lambda x: json.dumps(x, sort_keys=True, indent=4, ensure_ascii=False),
             pretty_xml=lambda x: etree.tostring(x, pretty_print=True, encoding=unicode),
-            dumper=Dumper.dump,
+            to_unicode=to_unicode,
+            dumper=dump,
             format_exception=lambda x: "".join(traceback.format_exception(*x))
         ))
 
     def complete(self, output_data=None):
-        with stack_context.ExceptionStackContext(self._handle_exception):
-            def finished_cb(handler, data):
-                handler.log.complete_logging(handler.get_status())
-                if handler.debug_type == _DEBUG_ALL:
-                    self.finish_with_debug()
-                    return
+        def finished_cb(handler, data):
+            handler.log.complete_logging(handler.get_status())
+            if handler.debug_type == _DEBUG_ALL:
+                self.finish_with_debug()
+                return
 
-                self.finish(data)
+            self.finish(data)
 
-            if self.postprocessors:
-                last = len(self.postprocessors) - 1
+        if self.postprocessors:
+            last = len(self.postprocessors) - 1
 
-                def add_cb(index):
-                    if index == last:
-                        return finished_cb
-                    else:
-                        def _cb(handler, data):
-                            self.postprocessors[index + 1](handler, data, add_cb(index + 1))
-                        return _cb
+            def add_cb(index):
+                if index == last:
+                    return finished_cb
+                else:
+                    def _cb(handler, data):
+                        self.postprocessors[index + 1](handler, data, add_cb(index + 1))
+                    return _cb
 
-                self.postprocessors[0](self, output_data, add_cb(0))
-            else:
-                finished_cb(self, output_data)
+            self.postprocessors[0](self, output_data, add_cb(0))
+        else:
+            finished_cb(self, output_data)
 
     def fetch_requests(self, requests, callback=None, stage='page'):
         self.log.stage_started(stage)
@@ -211,7 +214,7 @@ class RequestHandler(tornado.web.RequestHandler):
             self.http_client.fetch(req, ag.add(partial(_on_fetch, name=req.name)))
 
     def make_request(self, name, method='GET', full_url=None, url_prefix=None, path='', data='', headers=None,
-                     connect_timeout=0.5, request_timeout=2, follow_redirects=True):
+                     connect_timeout=1, request_timeout=2, follow_redirects=True, **kwargs):
 
         if (full_url is None) == (url_prefix is None):
             raise TypeError('make_request required path/url_prefix arguments pair or full_url argument')
@@ -229,7 +232,7 @@ class RequestHandler(tornado.web.RequestHandler):
             path = parsed_full_url.path
             query = parsed_full_url.query
 
-        if method in ['GET', 'HEAD']:
+        if method in ['GET', 'HEAD', 'DELETE']:
             parsed_query = urlparse.parse_qs(query)
             parsed_query.update(data if isinstance(data, dict) else urlparse.parse_qs(data))
             query = make_qs(parsed_query)
@@ -251,7 +254,8 @@ class RequestHandler(tornado.web.RequestHandler):
             body=body,
             connect_timeout=connect_timeout*options.tortik_timeout_multiplier,
             request_timeout=request_timeout*options.tortik_timeout_multiplier,
-            follow_redirects=follow_redirects
+            follow_redirects=follow_redirects,
+            **kwargs
         )
         req.name = name
         return req

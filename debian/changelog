@@ -1,3 +1,28 @@
+python-tortik (0.1.25) unstable; urgency=low
+
+  * add custom arguments to make request
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Fri, 3 Apr 2015 15:30:05 +0400
+
+python-tortik (0.1.24) unstable; urgency=low
+
+  * sources update
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Sun, 8 Feb 2015 21:30:05 +0400
+
+python-tortik (0.1.23) unstable; urgency=low
+
+  * use default simple http client
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Sun, 8 Feb 2015 08:11:05 +0400
+
+python-tortik (0.1.22) unstable; urgency=low
+
+  * jinja2 debug
+  * tornado 3.1+
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Mon, 12 Jan 2015 09:11:05 +0400
+
 python-tortik (0.1.10) unstable; urgency=low
 
   * HH-42822 return 200 for debug, add prop name quotes for json dump

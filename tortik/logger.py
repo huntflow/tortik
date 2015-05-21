@@ -7,6 +7,8 @@ from datetime import datetime
 
 from tornado.options import options, define
 
+from tortik.util.dumper import request_to_curl_string
+
 LOGGER_NAME = 'tortik'
 _SKIP_EVENT = "skip_event"
 
@@ -97,7 +99,8 @@ class PageLogger(logging.LoggerAdapter):
                     'url': request.url,
                     'method': request.method,
                     'headers': request.headers,
-                    'data': request.body
+                    'data': request.body,
+                    'curl': request_to_curl_string(request)
                 }
             }
             self.debug_info[request] = event
@@ -112,6 +115,7 @@ class PageLogger(logging.LoggerAdapter):
                 event.update({
                     'completed': now,
                     'took': now - event['started'],
+                    'time_info': getattr(resp, 'time_info', None),
                     'response': {
                         'code': resp.code,
                         'headers': resp.headers,
@@ -126,8 +130,8 @@ class PageLogger(logging.LoggerAdapter):
         elif resp.code >= 500:
             level = logging.ERROR
 
-        self.log(level,
-                 "Complete {0} {1} {2}".format(resp.code, resp.request.method, resp.request.url),
+        self.log(level, "Complete {0} {1} {2} in {3}ms".format(resp.code, resp.request.method, resp.request.url,
+                                                               int(resp.request_time * 1000.0)),
                  extra={_SKIP_EVENT: True})
 
     def stage_started(self, stage_name):
