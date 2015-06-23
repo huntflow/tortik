@@ -134,7 +134,7 @@ class RequestHandler(tornado.web.RequestHandler):
 
             return True
         else:
-            super(RequestHandler, self).write_error(status_code, kwargs)
+            super(RequestHandler, self).write_error(status_code, **kwargs)
 
     def finish_with_debug(self):
         self.set_header('Content-Type', 'text/html; charset=utf-8')
