@@ -43,6 +43,8 @@ class BuildHook(build_py):
         with open(os.path.join(build_dir, 'version.py'), 'w') as version_file:
             version_file.write('version = "{0}"\n'.format(version))
 
+required_packages = ['tornado', 'lxml', 'jinja2']
+
 setup(
     name="tortik",
     version=version,
@@ -55,5 +57,6 @@ setup(
         "tortik": find_package_data("tortik", "templates"),
     },
     cmdclass={'test': TestCommand, 'build_py': BuildHook},
-    requires=['tornado', 'lxml', 'nose', 'jinja2'],
+    install_requires=required_packages,
+    setup_requires=['nose'] + required_packages
 )
