@@ -9,5 +9,3 @@ include /usr/share/cdbs/1/class/python-distutils.mk
 
 build:
 	cd $(DEB_SRCDIR) && $(call cdbs_python_binary,python$(cdbs_python_compile_version)) $(DEB_PYTHON_SETUP_CMD) test || exit 1
-
-

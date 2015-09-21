@@ -1,10 +1,17 @@
 # -*- encoding: utf-8 -*-
-
-from urllib import urlencode
-import urllib
-import urlparse
 from types import FunctionType
 import tornado.web
+from tornado.util import unicode_type
+
+try:
+    import urlparse  # py2
+except ImportError:
+    import urllib.parse as urlparse  # py3
+
+try:
+    from urllib import urlencode  # py2
+except ImportError:
+    from urllib.parse import urlencode  # py3
 
 
 def decorate_all(decorator_list):
@@ -18,7 +25,7 @@ def decorate_all(decorator_list):
     """decorate all instance methods (unless excluded) with the same decorator"""
     class DecorateAll(type):
         def __new__(cls, name, bases, dct):
-            for func_name, func_obj in dct.iteritems():
+            for func_name, func_obj in dct.items():
                 for item in decorator_list:
                     decorator, check_param = item
                     if is_method_need_to_decorate(func_name, func_obj, check_param):
@@ -42,8 +49,8 @@ def make_list(val):
 
 
 def real_ip(request):
-    return (request.headers.get("X-Real-Ip", None) or request.headers.get("X-Forwarded-For", None)
-            or request.remote_ip or '127.0.0.1')
+    return (request.headers.get('X-Real-Ip', None) or request.headers.get('X-Forwarded-For', None) or
+            request.remote_ip or '127.0.0.1')
 
 
 HTTPError = tornado.web.HTTPError
@@ -56,7 +63,7 @@ def update_url(url, update_args=None, remove_args=None):
     else:
         url = '//' + url_new
 
-    url_split = urlparse.urlsplit(url.encode('utf-8') if isinstance(url, unicode) else url)
+    url_split = urlparse.urlsplit(url.encode('utf-8') if isinstance(url, unicode_type) else url)
     query_dict = urlparse.parse_qs(url_split.query, keep_blank_values=True)
 
     # add args
@@ -84,13 +91,13 @@ def update_url(url, update_args=None, remove_args=None):
 
 def make_qs(query_args):
     def _encode(s):
-        if isinstance(s, unicode):
+        if isinstance(s, unicode_type):
             return s.encode('utf-8')
         else:
             return s
 
     kv_pairs = []
-    for (key, val) in query_args.iteritems():
+    for (key, val) in query_args.items():
         if val is not None:
             if isinstance(val, list):
                 for v in val:
@@ -98,6 +105,6 @@ def make_qs(query_args):
             else:
                 kv_pairs.append((key, _encode(val)))
 
-    qs = urllib.urlencode(kv_pairs)
+    qs = urlencode(kv_pairs)
 
     return qs

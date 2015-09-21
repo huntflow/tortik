@@ -3,7 +3,6 @@
 import os
 import sys
 import time
-import urlparse
 import traceback
 import hashlib
 import random
@@ -12,13 +11,20 @@ from functools import partial
 from copy import copy
 import json
 
+try:
+    import urlparse  # py2
+except ImportError:
+    import urllib.parse as urlparse  # py3
+
 import lxml.etree as etree
 import tornado.web
 import tornado.httpclient
 from tornado.options import options, define
 from tornado.escape import to_unicode
 import tornado.gen
+from tornado.util import unicode_type
 from jinja2 import Environment, PackageLoader
+import six
 
 from tortik.util import decorate_all, make_list, real_ip, make_qs
 from tortik.util.dumper import dump
@@ -40,14 +46,16 @@ stats = count()
 
 
 def _gen_requestid():
-    return hashlib.md5("{}{}{}".format(os.getpid(), stats.next(), random.random())).hexdigest()
+    return hashlib.md5('{}{}{}'.format(os.getpid(), next(stats), random.random()).encode('utf-8')).hexdigest()
 
 
+_decorates = decorate_all([
+    (tornado.web.asynchronous, 'asynchronous'),  # should be the last
+])
+
+
+@six.add_metaclass(_decorates)
 class RequestHandler(tornado.web.RequestHandler):
-    decorators = [
-        (tornado.web.asynchronous, 'asynchronous'),  # should be the last
-    ]
-    __metaclass__ = decorate_all(decorators)
 
     def initialize(self, *args, **kwargs):
         debug_pass = options.debug_password
@@ -92,7 +100,7 @@ class RequestHandler(tornado.web.RequestHandler):
     def prepare(self):
         if self.preprocessors:
             start_time = time.time()
-            yield map(lambda x: tornado.gen.Task(x, self), self.preprocessors)
+            yield list(map(lambda x: tornado.gen.Task(x, self), self.preprocessors))
             self.log.debug("Preprocessors completed in %.2fms", (time.time() - start_time)*1000.)
 
     @staticmethod
@@ -147,7 +155,7 @@ class RequestHandler(tornado.web.RequestHandler):
             size=sys.getsizeof,
             get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
             pretty_json=lambda x: json.dumps(x, sort_keys=True, indent=4, ensure_ascii=False),
-            pretty_xml=lambda x: etree.tostring(x, pretty_print=True, encoding=unicode),
+            pretty_xml=lambda x: etree.tostring(x, pretty_print=True, encoding=unicode_type),
             to_unicode=to_unicode,
             dumper=dump,
             format_exception=lambda x: "".join(traceback.format_exception(*x))

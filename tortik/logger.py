@@ -164,7 +164,7 @@ class PageLogger(logging.LoggerAdapter):
             ('method', self.request.method),
             ('code', status_code),
             ('total', int(1000 * self.request.request_time()))  # <current_time> - <start> if request not finished yet
-        ] + self.stages.items() + additional_data
+        ] + list(self.stages.items()) + additional_data
 
         self.info('MONIK {0}'.format(' '.join('{0}={1}'.format(k, v) for (k, v) in data)))
 

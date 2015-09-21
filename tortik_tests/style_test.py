@@ -1,21 +1,15 @@
 # _*_ coding: utf-8 _*_
-from __future__ import absolute_import
 
 import sys
 from os import path
 import unittest
-from StringIO import StringIO
 
-min_pep8_version = '1.4.5'
-_version_to_tuple = lambda x: map(int, x.split('.'))
 try:
-    import pep8
-    pep8_version = _version_to_tuple(getattr(pep8, '__version__', '0.0'))
-    if pep8_version < _version_to_tuple(min_pep8_version):
-        raise ImportError
+    from StringIO import StringIO  # py2
 except ImportError:
-    sys.stderr.write('pep8 >= {} not found, use internal version\n'.format(min_pep8_version))
-    from tortik_tests import pep8
+    from io import StringIO  # py3
+
+import pep8
 
 _project_root = path.abspath(path.join(path.dirname(__file__), '..'))
 _src_dirs = [path.join(_project_root, 'tortik'),
@@ -45,6 +39,7 @@ class StyleTestCase(unittest.TestCase):
         result = pep8style.check_files(_src_dirs)
 
         fail = False
+        statistics = ''
         if result.total_errors > 0:
             format_vals = {'out': '', 'err': '', 'stat': ''}
             if nose_capture_enabled:
@@ -53,9 +48,11 @@ class StyleTestCase(unittest.TestCase):
             format_vals['stat'] = '\n'.join(result.get_statistics(''))
             statistics = '{out}{err}Statistics:{stat}'.format(**format_vals)
             fail = True
+
         if nose_capture_enabled:
             sys.stdout = nose_stdout
             sys.stderr = nose_stderr
+
         if fail:
-            print(statistics.decode('ascii', 'replace').replace(u'\uFFFD', '?'))
+            print(statistics)
             self.fail('PEP8 styles errors')

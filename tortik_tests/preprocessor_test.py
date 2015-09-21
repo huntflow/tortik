@@ -15,7 +15,7 @@ def first_preprocessor(handler, callback):
         callback()
 
     http_client = tornado.curl_httpclient.CurlAsyncHTTPClient()
-    http_client.fetch("https://api.hh.ru/status", handle_request, request_timeout=0.2)
+    http_client.fetch(b'https://api.hh.ru/status', handle_request, request_timeout=0.2)
 
 
 def second_preprocessor(handler, callback):
@@ -24,7 +24,7 @@ def second_preprocessor(handler, callback):
         callback()
 
     http_client = tornado.curl_httpclient.CurlAsyncHTTPClient()
-    http_client.fetch("https://api.hh.ru/status", handle_request, request_timeout=0.2)
+    http_client.fetch(b'https://api.hh.ru/status', handle_request, request_timeout=0.2)
 
 
 def third_preprocessor(handler, callback):
@@ -50,7 +50,7 @@ class MainHandler(RequestHandler):
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/", MainHandler),
+            (r'/', MainHandler),
         ]
 
         settings = dict(
@@ -70,4 +70,4 @@ class PreprocessorHTTPTestCase(AsyncHTTPTestCase):
         self.http_client.fetch(self.get_url('/'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn("ok", response.body)
+        self.assertIn(b'ok', response.body)

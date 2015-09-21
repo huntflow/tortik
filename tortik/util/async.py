@@ -69,7 +69,7 @@ class AsyncGroup(object):
                 else:
                     self.try_finish()
             else:
-                self._log("Ignoring response because of already finished group")
+                self._log('Ignoring response because of already finished group')
 
         return wrapper
 

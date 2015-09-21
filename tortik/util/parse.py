@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-
-import httplib
 from lxml import etree
 from tornado.escape import json_decode
 
 from tortik.util import HTTPError
+
+try:
+    import httplib  # py2
+except ImportError:
+    import http.client as httplib  # py3
 
 
 def parse_xml(response):

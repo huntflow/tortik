@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from tornado.httputil import HTTPHeaders
+from tornado.util import basestring_type
 
 
 def dump(obj):
@@ -16,7 +17,7 @@ def dump(obj):
                 return primitive('<circular reference>')
 
             refs.add(id(item))
-            return dict(type='array', value=map(lambda x: _make_dump(x), item))
+            return dict(type='array', value=list(map(lambda x: _make_dump(x), item)))
         elif isinstance(item, dict):
             if not item:
                 return dict(type='dict', value=dict())
@@ -27,7 +28,7 @@ def dump(obj):
             return dict(type='dict', value=dict((x, _make_dump(y)) for x, y in item.items()))
         elif isinstance(item, bool):
             return primitive('true' if item else 'false', 'bool')
-        elif isinstance(item, basestring):
+        elif isinstance(item, basestring_type):
             return primitive(item)
         elif isinstance(item, (int, float)):
             return primitive(item, 'number')
@@ -65,6 +66,6 @@ def request_to_curl_string(request):
         echo=curl_echo_data,
         method=request.method,
         url=request.url,
-        headers=' '.join("-H '{0}: {1}'".format(k, _escape_apos(str(v))) for k, v in curl_headers.iteritems()),
+        headers=' '.join("-H '{0}: {1}'".format(k, _escape_apos(str(v))) for k, v in curl_headers.items()),
         data=curl_data_string
     ).strip()
