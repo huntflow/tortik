@@ -12,6 +12,11 @@ class FakeRequest(object):
     headers = {}
 
 
+# py2 to py3
+_base_make_request = RequestHandler.make_request
+_make_request = _base_make_request.im_func if hasattr(_base_make_request, 'im_func') else _base_make_request
+
+
 class FakeHandler(object):
     def __init__(self):
         self.request = FakeRequest()
@@ -20,7 +25,7 @@ class FakeHandler(object):
             "X-Real-Ip": fake_real_ip
         }
 
-    make_request = RequestHandler.make_request.im_func  # Copy function from real handler
+    make_request = _make_request
 
 
 class MakeRequestTestCase(TestCase):
@@ -109,11 +114,11 @@ class MakeRequestTestCase(TestCase):
         full_url = 'http://example.com/path_to?foo=1'
         request = self.fake_handler.make_request(name='abc', method='POST', full_url=full_url, data={'bar': 2})
         self.assertEqual(request.url, full_url)
-        self.assertEqual(request.body, 'bar=2')
+        self.assertEqual(request.body, b'bar=2')
 
     def test_post_full_query_raw(self):
         full_url = 'http://example.com/path_to?foo=1'
-        data = '{"json":true}'
+        data = b'{"json":true}'
         request = self.fake_handler.make_request(name='abc', method='POST', full_url=full_url, data=data)
         self.assertEqual(request.url, full_url)
         self.assertEqual(request.body, data)
@@ -129,4 +134,4 @@ class MakeRequestTestCase(TestCase):
             data={'bar': 2}
         )
         self.assertEqual(request.url, 'http://' + url_prefix + path)
-        self.assertEqual(request.body, 'bar=2')
+        self.assertEqual(request.body, b'bar=2')

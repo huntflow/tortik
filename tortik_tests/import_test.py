@@ -24,7 +24,7 @@ class ImportAllPythonCodeTestCase(unittest.TestCase):
     def try_import(self, module):
         try:
             importlib.import_module(module)
-        except ImportError, e:
+        except ImportError as e:
             self.fail('Unable to import "{module}" module ({e!s}). \n\nSys paths:\n{paths}'.format(
                 module=module, e=e, paths='\n'.join(sys.path)
             ))

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+
 import tornado.web
 import tornado.ioloop
-import tornado.curl_httpclient
 from tornado.testing import AsyncHTTPTestCase
 from tornado.options import options
+
 from tortik.page import RequestHandler
 import tortik.logger
 
@@ -85,25 +86,25 @@ class DebugHTTPTestCase(AsyncHTTPTestCase):
         self.http_client.fetch(self.get_url('/?debug'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn("Log from preprocessor", response.body)
-        self.assertIn("Log from postprocessor", response.body)
-        self.assertIn("https://api.hh.ru/status", response.body)
+        self.assertIn(b'Log from preprocessor', response.body)
+        self.assertIn(b'Log from postprocessor', response.body)
+        self.assertIn(b'https://api.hh.ru/status', response.body)
 
     def test_exception(self):
         self.http_client.fetch(self.get_url('/exception'), self.stop)
         response = self.wait()
         self.assertEqual(500, response.code)
-        self.assertIn("Log from preprocessor", response.body)
-        self.assertNotIn("Log from postprocessor", response.body)
-        self.assertIn("https://api.hh.ru/status", response.body)
-        self.assertIn("ZeroDivisionError", response.body)
+        self.assertIn(b'Log from preprocessor', response.body)
+        self.assertNotIn(b'Log from postprocessor', response.body)
+        self.assertIn(b'https://api.hh.ru/status', response.body)
+        self.assertIn(b'ZeroDivisionError', response.body)
 
     def test_debug_exception(self):
         self.http_client.fetch(self.get_url('/exception?debug'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn('code=500', response.body)
-        self.assertIn("ZeroDivisionError", response.body)
+        self.assertIn(b'code=500', response.body)
+        self.assertIn(b'ZeroDivisionError', response.body)
 
 
 class DebugPasswordHTTPTestCase(AsyncHTTPTestCase):
@@ -130,34 +131,34 @@ class DebugPasswordHTTPTestCase(AsyncHTTPTestCase):
         self.http_client.fetch(self.get_url('/?debug'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertNotIn("Log from preprocessor", response.body)
-        self.assertNotIn("Log from postprocessor", response.body)
-        self.assertNotIn("https://api.hh.ru/status", response.body)
-        self.assertIn("Hello, world!", response.body)
+        self.assertNotIn(b'Log from preprocessor', response.body)
+        self.assertNotIn(b'Log from postprocessor', response.body)
+        self.assertNotIn(b'https://api.hh.ru/status', response.body)
+        self.assertIn(b'Hello, world!', response.body)
 
     def test_debug_true(self):
         self.http_client.fetch(self.get_url('/?debug=123'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn("Log from preprocessor", response.body)
-        self.assertIn("Log from postprocessor", response.body)
-        self.assertIn("https://api.hh.ru/status", response.body)
+        self.assertIn(b'Log from preprocessor', response.body)
+        self.assertIn(b'Log from postprocessor', response.body)
+        self.assertIn(b'https://api.hh.ru/status', response.body)
 
     def test_exception(self):
         self.http_client.fetch(self.get_url('/exception'), self.stop)
         response = self.wait()
         self.assertEqual(500, response.code)
-        self.assertNotIn("Log from preprocessor", response.body)
-        self.assertNotIn("Log from postprocessor", response.body)
-        self.assertNotIn("https://api.hh.ru/status", response.body)
-        self.assertNotIn("Hello, world!", response.body)
+        self.assertNotIn(b'Log from preprocessor', response.body)
+        self.assertNotIn(b'Log from postprocessor', response.body)
+        self.assertNotIn(b'https://api.hh.ru/status', response.body)
+        self.assertNotIn(b'Hello, world!', response.body)
 
     def test_debug_exception(self):
         self.http_client.fetch(self.get_url('/exception?debug=123'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn('code=500', response.body)
-        self.assertIn("ZeroDivisionError", response.body)
+        self.assertIn(b'code=500', response.body)
+        self.assertIn(b'ZeroDivisionError', response.body)
 
 
 class DebugTurnedOffHTTPTestCase(AsyncHTTPTestCase):
@@ -180,16 +181,16 @@ class DebugTurnedOffHTTPTestCase(AsyncHTTPTestCase):
         self.http_client.fetch(self.get_url('/?debug'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertNotIn("Log from preprocessor", response.body)
-        self.assertNotIn("Log from postprocessor", response.body)
-        self.assertNotIn("https://api.hh.ru/status", response.body)
-        self.assertIn("Hello, world!", response.body)
+        self.assertNotIn(b'Log from preprocessor', response.body)
+        self.assertNotIn(b'Log from postprocessor', response.body)
+        self.assertNotIn(b'https://api.hh.ru/status', response.body)
+        self.assertIn(b'Hello, world!', response.body)
 
     def test_debug_exception(self):
         self.http_client.fetch(self.get_url('/exception'), self.stop)
         response = self.wait()
         self.assertEqual(500, response.code)
-        self.assertNotIn("Log from preprocessor", response.body)
-        self.assertNotIn("Log from postprocessor", response.body)
-        self.assertNotIn("https://api.hh.ru/status", response.body)
-        self.assertNotIn("Hello, world!", response.body)
+        self.assertNotIn(b'Log from preprocessor', response.body)
+        self.assertNotIn(b'Log from postprocessor', response.body)
+        self.assertNotIn(b'https://api.hh.ru/status', response.body)
+        self.assertNotIn(b'Hello, world!', response.body)

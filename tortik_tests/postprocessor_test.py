@@ -27,7 +27,7 @@ class MainHandler(RequestHandler):
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/", MainHandler),
+            (r'/', MainHandler),
         ]
 
         settings = dict(
@@ -47,4 +47,4 @@ class PostprocessorHTTPTestCase(AsyncHTTPTestCase):
         self.http_client.fetch(self.get_url('/'), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn("Good bye!", response.body)
+        self.assertIn(b'Good bye!', response.body)

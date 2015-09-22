@@ -11,6 +11,6 @@ def __parse_version_from_changelog():
             regmatch = re.match(r'python-tortik \((.*)\).*', changelog.readline())
             return regmatch.groups()[0]
     except (IOError, AttributeError):
-        return 'unknown_version'
+        return None
 
-version = '0.1.28'
+version = __parse_version_from_changelog() or '0.1.28'

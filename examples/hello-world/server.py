@@ -36,7 +36,7 @@ def postprocessor(handler, data, callback):
         handler.log.info('Log from postprocessor')
         added_data = handler.get_data()
         processed_data = map(lambda x: x.get('header_image'), added_data.get('steam', {}).get('large_capsules', []))
-        callback(handler, {'images': processed_data})
+        callback(handler, {'images': list(processed_data)})
 
     IOLoop.instance().add_callback(handle_request)  # emulate async call
 
