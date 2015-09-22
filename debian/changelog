@@ -1,3 +1,9 @@
+python-tortik (0.2.0) unstable; urgency=low
+
+  * add python 3.3+ support
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Tue, 21 Sep 2015 8:54:00 +0400
+
 python-tortik (0.1.28) unstable; urgency=low
 
   * add installation dependencies
