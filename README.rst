@@ -9,6 +9,14 @@ Tortik is a micro framework atop of Python Tornado making easier to develop SOA-
 .. image:: https://coveralls.io/repos/glibin/tortik/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/glibin/tortik?branch=master
 
+.. image:: https://img.shields.io/pypi/pyversions/tortik.svg
+    :target: https://pypi.python.org/pypi/tortik/
+
+.. image:: https://img.shields.io/pypi/v/tortik.svg
+    :target: https://pypi.python.org/pypi/tortik
+
+
 Documentation available at `<http://glibin.github.io/tortik>`_
+
 
 Explanation of SOA and tortik use cases at PyCon RU 2014 (in Russian) `<http://glibin.github.io/lections/pycon2014/>`_
