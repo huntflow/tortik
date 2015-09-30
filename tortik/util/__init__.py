@@ -54,6 +54,7 @@ def real_ip(request):
 
 
 HTTPError = tornado.web.HTTPError
+ITERABLE = (set, frozenset, list, tuple)
 
 
 def update_url(url, update_args=None, remove_args=None):
@@ -63,30 +64,19 @@ def update_url(url, update_args=None, remove_args=None):
     else:
         url = '//' + url_new
 
-    url_split = urlparse.urlsplit(url.encode('utf-8') if isinstance(url, unicode_type) else url)
+    url_split = urlparse.urlsplit(url)
     query_dict = urlparse.parse_qs(url_split.query, keep_blank_values=True)
 
     # add args
     if update_args:
         query_dict.update(update_args)
-        # remove args
+
+    # remove args
     if remove_args:
         query_dict = dict([(k, query_dict.get(k)) for k in query_dict if k not in remove_args])
 
-    query = urlencode(query_dict, doseq=True)
-    # specific case without net location. Thx to maizy for this fuckin' case
-    if url_split.netloc:
-        return urlparse.urlunsplit((scheme, url_split.netloc, url_split.path, query, url_split.fragment))
-    else:
-        return ''.join([
-            scheme,
-            '://' if scheme else '',
-            url_split.path,
-            '?' if query else '',
-            query,
-            '#' if url_split.fragment else '',
-            url_split.fragment
-        ])
+    query = make_qs(query_dict)
+    return urlparse.urlunsplit((scheme, url_split.netloc, url_split.path, query, url_split.fragment))
 
 
 def make_qs(query_args):
@@ -97,14 +87,15 @@ def make_qs(query_args):
             return s
 
     kv_pairs = []
-    for (key, val) in query_args.items():
+    for key, val in query_args.items():
         if val is not None:
-            if isinstance(val, list):
+            encoded_key = _encode(key)
+            if isinstance(val, ITERABLE):
                 for v in val:
-                    kv_pairs.append((key, _encode(v)))
+                    kv_pairs.append((encoded_key, _encode(v)))
             else:
-                kv_pairs.append((key, _encode(val)))
+                kv_pairs.append((encoded_key, _encode(val)))
 
-    qs = urlencode(kv_pairs)
+    qs = urlencode(kv_pairs, doseq=True)
 
     return qs

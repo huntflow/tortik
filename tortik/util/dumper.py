@@ -2,6 +2,8 @@
 from tornado.httputil import HTTPHeaders
 from tornado.util import basestring_type
 
+from . import ITERABLE
+
 
 def dump(obj):
     refs = set()
@@ -10,7 +12,7 @@ def dump(obj):
         return dict(type=ptype, value=value)
 
     def _make_dump(item):
-        if isinstance(item, list):
+        if isinstance(item, ITERABLE):
             if len(item) == 0:
                 return dict(type='array', value=[])
             if id(item) in refs:
@@ -41,8 +43,8 @@ def dump(obj):
 
 
 def request_to_curl_string(request):
-    def _escape_apos(string):
-        return string.replace("'", "'\"'\"'")
+    def _escape_apos(s):
+        return s.replace("'", "'\"'\"'")
 
     try:
         if request.body:
@@ -56,16 +58,16 @@ def request_to_curl_string(request):
         curl_headers['Content-Length'] = len(request.body)
 
     if is_binary_data:
-        curl_echo_data = "echo -e {0} |".format(repr(request.body))
+        curl_echo_data = "echo -e {} |".format(repr(request.body))
         curl_data_string = '--data-binary @-'
     else:
         curl_echo_data = ''
-        curl_data_string = "--data '{0}'".format(_escape_apos(request.body)) if request.body else ''
+        curl_data_string = "--data '{}'".format(_escape_apos(str(request.body))) if request.body else ''
 
     return "{echo} curl -X {method} '{url}' {headers} {data}".format(
         echo=curl_echo_data,
         method=request.method,
         url=request.url,
-        headers=' '.join("-H '{0}: {1}'".format(k, _escape_apos(str(v))) for k, v in curl_headers.items()),
+        headers=' '.join("-H '{}: {}'".format(k, _escape_apos(str(v))) for k, v in curl_headers.items()),
         data=curl_data_string
     ).strip()

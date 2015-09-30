@@ -20,12 +20,13 @@ except NameError:
     from functools import reduce  # py3
 
 TEST_MODULES = [
-    'tortik_tests.style_test',
+    'tortik_tests.pep8_test',
     'tortik_tests.import_test',
     'tortik_tests.debug_test',
     'tortik_tests.dumper_test',
     'tortik_tests.exceptions_test',
     'tortik_tests.make_request_test',
+    'tortik_tests.util_test',
     'tortik_tests.postprocessor_test',
     'tortik_tests.preprocessor_test',
 ]
