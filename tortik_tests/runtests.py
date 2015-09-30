@@ -26,7 +26,7 @@ TEST_MODULES = [
     'tortik_tests.dumper_test',
     'tortik_tests.exceptions_test',
     'tortik_tests.make_request_test',
-    'tortik_tests.make_qs_test',
+    'tortik_tests.util_test',
     'tortik_tests.postprocessor_test',
     'tortik_tests.preprocessor_test',
 ]

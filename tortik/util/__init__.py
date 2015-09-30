@@ -75,20 +75,8 @@ def update_url(url, update_args=None, remove_args=None):
     if remove_args:
         query_dict = dict([(k, query_dict.get(k)) for k in query_dict if k not in remove_args])
 
-    query = urlencode(query_dict, doseq=True)
-    # specific case without net location. Thx to maizy for this fuckin' case
-    if url_split.netloc:
-        return urlparse.urlunsplit((scheme, url_split.netloc, url_split.path, query, url_split.fragment))
-    else:
-        return ''.join([
-            scheme,
-            '://' if scheme else '',
-            url_split.path,
-            '?' if query else '',
-            query,
-            '#' if url_split.fragment else '',
-            url_split.fragment
-        ])
+    query = make_qs(query_dict)
+    return urlparse.urlunsplit((scheme, url_split.netloc, url_split.path, query, url_split.fragment))
 
 
 def make_qs(query_args):
@@ -108,6 +96,6 @@ def make_qs(query_args):
             else:
                 kv_pairs.append((encoded_key, _encode(val)))
 
-    qs = urlencode(kv_pairs)
+    qs = urlencode(kv_pairs, doseq=True)
 
     return qs
