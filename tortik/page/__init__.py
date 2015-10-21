@@ -56,6 +56,13 @@ _decorates = decorate_all([
 
 @six.add_metaclass(_decorates)
 class RequestHandler(tornado.web.RequestHandler):
+    """Base handler for request handle
+
+    Differs from ``tornado.web.RequestHandler`` that all method handlers are ``@tornado.web.asynchronous`` by default.
+
+    Handler completion should be done with ``self.complete`` method
+    instead of ``self.finish`` for applying postprocessors.
+     """
 
     def initialize(self, *args, **kwargs):
         debug_pass = options.debug_password
@@ -223,6 +230,29 @@ class RequestHandler(tornado.web.RequestHandler):
 
     def make_request(self, name, method='GET', full_url=None, url_prefix=None, path='', data='', headers=None,
                      connect_timeout=1, request_timeout=2, follow_redirects=True, **kwargs):
+        """
+        Class for easier constructing ``tornado.httpclient.HTTPRequest`` object.
+
+        Request url could be constructed with two ways:
+
+            * ``full_url`` argument
+            * ``url_prefix`` as domain part and ``path`` as path part
+
+        :param string name: Name of the request (for later accessing response through ``self.responses.get(name)``)
+        :param string method: HTTP method, e.g. "GET" or "POST"
+        :param string full_url: Full url for the requesting server (ex. ``http://example.com``)
+        :param string url_prefix: Request url domain part
+        :param string path: Request url path part
+        :param data: Query to be passed to the request (could be a dict and would be translated to a query string)
+        :type data: `string` or `dict`
+        :param headers: Additional HTTP headers to pass on the request
+        :type headers: ``tornado.httputil.HTTPHeaders`` or `dict`
+        :param float connect_timeout: Timeout for initial connection in seconds
+        :param float request_timeout: Timeout for entire request in seconds
+        :param bool follow_redirects: Should redirects be followed automatically or return the 3xx response?
+        :param kwargs: any other ``tornado.httpclient.HTTPRequest`` arguments
+        :return: ``tornado.httpclient.HTTPRequest``
+        """
 
         if (full_url is None) == (url_prefix is None):
             raise TypeError('make_request required path/url_prefix arguments pair or full_url argument')
