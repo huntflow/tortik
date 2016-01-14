@@ -19,6 +19,7 @@ install:
     - if [[ $TRAVIS_PYTHON_VERSION != 'pypy'* && $DEPS == true ]]; then travis_retry pip install pycurl; fi
     - if [[ $TRAVIS_PYTHON_VERSION == '2.7' && $DEPS == true ]]; then travis_retry travis_retry pip install sphinx==1.2.2 sphinx_rtd_theme; fi
     - if [[ $TRAVIS_PYTHON_VERSION == '3.5' && $DEPS == true ]]; then travis_retry travis_retry pip install sphinx==1.2.2 sphinx_rtd_theme; fi
+    - if [[ $DEPS == true ]]; then travis_retry pip install lxml; fi
     - travis_retry python setup.py install
     - travis_retry pip install pep8 coverage==3.7.1 codecov coveralls pycurl pycares
 
