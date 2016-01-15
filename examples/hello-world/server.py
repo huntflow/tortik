@@ -52,7 +52,8 @@ class MainHandler(RequestHandler):
     def get(self):
         self.fetch_requests([
             ('steam', 'http://store.steampowered.com/api/featured/'),
-            ('hhapi', 'https://api.hh.ru/dictionaries', {'locale': 'EN'})
+            ('hhapi', 'https://api.hh.ru/dictionaries', {'locale': 'EN'}),
+            ('xml', self.request.protocol + "://" + self.request.host + '/mock/xml')
         ], callback=self.complete)
 
 
@@ -65,11 +66,25 @@ class ExceptionHandler(MainHandler):
         test = 1 / 0  # ZeroDivisionError
 
 
+class MockXmlHandler(tornado.web.RequestHandler):
+    @staticmethod
+    def mock_data():
+        fd = open(path.join(path.dirname(__file__), 'simple.xml'), 'r')
+        data = fd.read()
+        fd.close()
+        return data
+
+    def get(self):
+        self.set_header('Content-Type', 'application/xml')
+        self.finish(self.mock_data())
+
+
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r'/', MainHandler),
             (r'/exception', ExceptionHandler),
+            (r'/mock/xml', MockXmlHandler),
         ]
 
         tortik.logger.configure()

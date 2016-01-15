@@ -1,9 +1,16 @@
 # _*_ coding: utf-8 _*_
+import os
+try:
+    from cStringIO import StringIO  # python 2
+except ImportError:
+    from io import StringIO  # python 3
 
 from collections import OrderedDict
 import unittest
+from tornado.escape import to_unicode
 
 from tortik.util import make_qs, update_url
+from tortik.util.xml_etree import parse, tostring
 
 
 class BaseTest(unittest.TestCase):
@@ -96,3 +103,20 @@ class TestUpdateUrl(BaseTest):
                              'http://google.com?a=1')
         self.assertUrlsEqual(update_url('http://google.com?a=2&b=3&c=4', update_args={'a': 1}, remove_args=['b']),
                              'http://google.com?a=1&c=4')
+
+
+class TestParse(BaseTest):
+    def test_parse_xml(self):
+        fd = open(os.path.join(os.path.dirname(__file__), 'data', 'simple.xml'), 'r')
+        tree = parse(fd)
+        self.assertEqual(tree.getroot().tag, 'data')
+        convert = tostring(tree.getroot(), pretty_print=True, xml_declaration=True, encoding='UTF-8')
+        # replace any possible conversion differences that are ok
+        # Python 3+ native etree does not include xml declaration so we should remove it everywhere
+        converted = to_unicode(convert).replace('\n', '').replace(' ', '').replace('\'', '"').\
+            replace('<?xmlversion="1.0"encoding="UTF-8"?>', '').strip()
+        fd.seek(0)
+        base = to_unicode(fd.read()).replace('\n', '').replace(' ', '').\
+            replace('<?xmlversion="1.0"encoding="UTF-8"?>', '').strip()
+        self.assertEqual(converted, base)
+        fd.close()

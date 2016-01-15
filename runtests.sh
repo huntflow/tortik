@@ -1,3 +1,3 @@
 #!/bin/sh
 
-nosetests tortik_tests/
+python -m tortik_tests.runtests

@@ -16,18 +16,17 @@ try:
 except ImportError:
     import urllib.parse as urlparse  # py3
 
-import lxml.etree as etree
 import tornado.web
 import tornado.httpclient
 from tornado.options import options, define
 from tornado.escape import to_unicode
 import tornado.gen
-from tornado.util import unicode_type
 from jinja2 import Environment, PackageLoader
 import six
 
 from tortik.util import decorate_all, make_list, real_ip, make_qs
 from tortik.util.dumper import dump
+from tortik.util.xml_etree import tostring
 from tortik.logger import PageLogger
 from tortik.util.async import AsyncGroup
 from tortik.util.parse import parse_xml, parse_json
@@ -162,7 +161,8 @@ class RequestHandler(tornado.web.RequestHandler):
             size=sys.getsizeof,
             get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
             pretty_json=lambda x: json.dumps(x, sort_keys=True, indent=4, ensure_ascii=False),
-            pretty_xml=lambda x: etree.tostring(x, pretty_print=True, encoding=unicode_type),
+            pretty_xml=lambda x: to_unicode(tostring(x.getroot() if hasattr(x, 'getroot') else x,
+                                                     pretty_print=True, encoding='UTF-8')),
             to_unicode=to_unicode,
             dumper=dump,
             format_exception=lambda x: "".join(traceback.format_exception(*x))
