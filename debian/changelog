@@ -1,3 +1,10 @@
+python-tortik (0.2.2) unstable; urgency=low
+
+  * add fallback to native xml.etree implementation
+  * added more tests and link to docs (Read the Docs)
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Fri, 15 Jan 2016 8:46:00 +0400
+
 python-tortik (0.2.1) unstable; urgency=low
 
   * fix debug view for html returned from backend
