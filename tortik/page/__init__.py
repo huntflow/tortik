@@ -161,7 +161,8 @@ class RequestHandler(tornado.web.RequestHandler):
             size=sys.getsizeof,
             get_params=lambda x: urlparse.parse_qs(x, keep_blank_values=True),
             pretty_json=lambda x: json.dumps(x, sort_keys=True, indent=4, ensure_ascii=False),
-            pretty_xml=lambda x: to_unicode(tostring(x, pretty_print=True, encoding='UTF-8')),
+            pretty_xml=lambda x: to_unicode(tostring(x.getroot() if hasattr(x, 'getroot') else x,
+                                                     pretty_print=True, encoding='UTF-8')),
             to_unicode=to_unicode,
             dumper=dump,
             format_exception=lambda x: "".join(traceback.format_exception(*x))

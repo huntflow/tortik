@@ -1,0 +1,25 @@
+{
+    "count": 1,
+    "giveaways": [
+        {
+            "state": "ACTIVE",
+            "golden": true,
+            "code": "42de59705652efc5306463cafb5db34c",
+            "gift_as_key": false,
+            "created": 1452355133,
+            "is_member": false,
+            "price": 0,
+            "winner": null,
+            "sandbox": null,
+            "key_stat": null,
+            "constraint_check": true,
+            "finish": 1452891600,
+            "regionlock_type_id": "russia",
+            "regionlocks": [],
+            "entries": 180,
+            "giveaway_type_id": "GIFT",
+            "entered": null
+        }
+    ],
+    "total": 1
+}

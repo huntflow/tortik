@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-
+import os
 import time
+
 import tornado.web
 import tornado.ioloop
 import tornado.curl_httpclient
+from tornado.escape import json_decode
 from tornado.testing import AsyncHTTPTestCase
 
 from tortik.page import RequestHandler
@@ -15,7 +17,8 @@ def first_preprocessor(handler, callback):
         callback()
 
     http_client = tornado.curl_httpclient.CurlAsyncHTTPClient()
-    http_client.fetch(b'https://api.hh.ru/status', handle_request, request_timeout=0.2)
+    http_client.fetch(handler.request.protocol + "://" + handler.request.host + '/mock/json',
+                      handle_request, request_timeout=0.2)
 
 
 def second_preprocessor(handler, callback):
@@ -24,7 +27,8 @@ def second_preprocessor(handler, callback):
         callback()
 
     http_client = tornado.curl_httpclient.CurlAsyncHTTPClient()
-    http_client.fetch(b'https://api.hh.ru/status', handle_request, request_timeout=0.2)
+    http_client.fetch(handler.request.protocol + "://" + handler.request.host + '/mock/json',
+                      handle_request, request_timeout=0.2)
 
 
 def third_preprocessor(handler, callback):
@@ -47,10 +51,23 @@ class MainHandler(RequestHandler):
             raise tornado.web.HTTPError(500)
 
 
+class MockJsonHandler(tornado.web.RequestHandler):
+    @staticmethod
+    def mock_data():
+        fd = open(os.path.join(os.path.dirname(__file__), 'data', 'simple.json'), 'r')
+        data = json_decode(fd.read())
+        fd.close()
+        return data
+
+    def get(self):
+        self.finish(self.mock_data())
+
+
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r'/', MainHandler),
+            (r"/mock/json", MockJsonHandler),
         ]
 
         settings = dict(
