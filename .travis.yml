@@ -36,7 +36,7 @@ script:
     - if [[ $TRAVIS_PYTHON_VERSION != nightly ]]; then export TARGET="-m coverage run $TARGET"; fi
     - python $TARGET
     - python -O $TARGET
-    - LANG=C python $TARGET
+    # - LANG=C python $TARGET
     - LANG=en_US.utf-8 python $TARGET
     - if [[ $TRAVIS_PYTHON_VERSION == 2* && $DEPS == true ]]; then python $TARGET --httpclient=tornado.curl_httpclient.CurlAsyncHTTPClient; fi
     - if [[ $TRAVIS_PYTHON_VERSION == 3.5 ]]; then python $TARGET --ioloop=tornado.platform.asyncio.AsyncIOLoop; fi
