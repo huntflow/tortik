@@ -1,3 +1,9 @@
+python-tortik (0.2.3) unstable; urgency=low
+
+  * add supprt for PATCH method
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Fri, 18 Nov 2016 12:36:00 +0300
+
 python-tortik (0.2.2) unstable; urgency=low
 
   * add fallback to native xml.etree implementation

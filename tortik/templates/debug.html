@@ -253,7 +253,7 @@
                                 {% endfor %}
                             {% endfor %}
                         {% endif %}
-                        {% if entry['request']['method'] in ['POST', 'PUT'] %}
+                        {% if entry['request']['method'] in ['POST', 'PUT', 'PATCH'] %}
                             {% for k, v in get_params(entry['request']['data']).items() %}
                                 {% for value in v %}
                                 <tr><td class="entry-data-table__key">{{ k }}</td><td>{{ value }}</td></tr>

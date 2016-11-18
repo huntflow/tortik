@@ -17,7 +17,7 @@ except ImportError:
 def decorate_all(decorator_list):
     def is_method_need_to_decorate(func_name, func_obj, check_param):
         """check if an object should be decorated"""
-        methods = ["get", "head", "post", "put", "delete"]
+        methods = ["get", "head", "post", "put", "delete", "patch"]
         return (func_name in methods and
                 isinstance(func_obj, FunctionType) and
                 getattr(func_obj, check_param, True))
