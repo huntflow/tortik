@@ -28,7 +28,7 @@ from tortik.util import decorate_all, make_list, real_ip, make_qs
 from tortik.util.dumper import dump
 from tortik.util.xml_etree import tostring
 from tortik.logger import PageLogger
-from tortik.util.async import AsyncGroup
+from tortik.util.async_group import AsyncGroup
 from tortik.util.parse import parse_xml, parse_json
 
 
