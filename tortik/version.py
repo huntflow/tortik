@@ -13,4 +13,5 @@ def __parse_version_from_changelog():
     except (IOError, AttributeError):
         return None
 
-version = __parse_version_from_changelog() or '0.2.3'
+
+version = __parse_version_from_changelog() or '0.2.4'
