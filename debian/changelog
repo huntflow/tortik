@@ -1,3 +1,9 @@
+python-tortik (0.2.4) unstable; urgency=low
+
+  * rename async to async_group
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Wed, 8 May 2019 21:10:00 +0300
+
 python-tortik (0.2.3) unstable; urgency=low
 
   * add supprt for PATCH method
