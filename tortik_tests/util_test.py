@@ -15,6 +15,7 @@ from tortik.util.xml_etree import parse, tostring
 
 class Request(object):
     headers = {}
+    remote_ip = None
 
 
 class BaseTest(unittest.TestCase):
