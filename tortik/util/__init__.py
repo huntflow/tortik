@@ -49,8 +49,9 @@ def make_list(val):
 
 
 def real_ip(request):
+    # split is for X-Forwarded-For header that can consist of many IPs: X-Forwarded-For: client, proxy1, proxy2
     return (request.headers.get('X-Real-Ip', None) or request.headers.get('X-Forwarded-For', None) or
-            request.remote_ip or '127.0.0.1')
+            request.remote_ip or '127.0.0.1').split(',')[0]
 
 
 HTTPError = tornado.web.HTTPError

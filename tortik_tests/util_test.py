@@ -9,8 +9,12 @@ from collections import OrderedDict
 import unittest
 from tornado.escape import to_unicode
 
-from tortik.util import make_qs, update_url
+from tortik.util import make_qs, update_url, real_ip
 from tortik.util.xml_etree import parse, tostring
+
+
+class Request(object):
+    headers = {}
 
 
 class BaseTest(unittest.TestCase):
@@ -120,3 +124,20 @@ class TestParse(BaseTest):
             replace('<?xmlversion="1.0"encoding="UTF-8"?>', '').strip()
         self.assertEqual(converted, base)
         fd.close()
+
+
+class TestRealIp(BaseTest):
+    def test_real_ip(self):
+        # default
+        request = Request()
+        self.assertEqual('127.0.0.1', real_ip(request))
+
+        request = Request()
+        request.headers = {'X-Real-Ip': '8.8.8.8', 'X-Forwarded-For': '10.0.0.1'}
+
+        self.assertEqual('8.8.8.8', real_ip(request))
+
+        request = Request()
+        request.headers = {'X-Forwarded-For': '10.0.0.1, 127.0.0.1'}
+
+        self.assertEqual('10.0.0.1', real_ip(request))
