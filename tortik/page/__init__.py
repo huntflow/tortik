@@ -206,6 +206,10 @@ class RequestHandler(tornado.web.RequestHandler):
         def _on_fetch(response, name):
             content_type = response.headers.get('Content-Type', '').split(';')[0]
             response.data = None
+            self.log.debug(
+                'Got response for "%s" (code = %s, content_type = %s): %s',
+                name, response.code, content_type, response.body,
+            )
             try:
                 if 'xml' in content_type:
                     response.data = parse_xml(response)
