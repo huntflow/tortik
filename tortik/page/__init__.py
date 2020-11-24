@@ -233,7 +233,7 @@ class RequestHandler(tornado.web.RequestHandler):
             self.http_client.fetch(req, ag.add(partial(_on_fetch, name=req.name)))
 
     def make_request(self, name, method='GET', full_url=None, url_prefix=None, path='', data='', headers=None,
-                     connect_timeout=1, request_timeout=2, follow_redirects=True, safe='/,', **kwargs):
+                     connect_timeout=1, request_timeout=2, follow_redirects=True, safe='/', **kwargs):
         """
         Class for easier constructing ``tornado.httpclient.HTTPRequest`` object.
 

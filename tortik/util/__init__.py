@@ -87,7 +87,7 @@ def _encode(s):
         return s
 
 
-def make_qs(query_args, safe='/,'):
+def make_qs(query_args, safe='/'):
     kv_pairs = []
     for key, val in query_args.items():
         if val is not None:
