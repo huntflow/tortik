@@ -9,9 +9,9 @@ except ImportError:
     import urllib.parse as urlparse  # py3
 
 try:
-    from urllib import urlencode  # py2
-except ImportError:
     from urllib.parse import urlencode  # py3
+except ImportError:
+    from tortik.util.url import urlencode
 
 
 def decorate_all(decorator_list):
@@ -80,13 +80,14 @@ def update_url(url, update_args=None, remove_args=None):
     return urlparse.urlunsplit((scheme, url_split.netloc, url_split.path, query, url_split.fragment))
 
 
-def make_qs(query_args):
-    def _encode(s):
-        if isinstance(s, unicode_type):
-            return s.encode('utf-8')
-        else:
-            return s
+def _encode(s):
+    if isinstance(s, unicode_type):
+        return s.encode('utf-8')
+    else:
+        return s
 
+
+def make_qs(query_args, safe='/,'):
     kv_pairs = []
     for key, val in query_args.items():
         if val is not None:
@@ -97,6 +98,6 @@ def make_qs(query_args):
             else:
                 kv_pairs.append((encoded_key, _encode(val)))
 
-    qs = urlencode(kv_pairs, doseq=True)
+    qs = urlencode(kv_pairs, doseq=True, safe=safe)
 
     return qs

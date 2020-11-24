@@ -233,7 +233,7 @@ class RequestHandler(tornado.web.RequestHandler):
             self.http_client.fetch(req, ag.add(partial(_on_fetch, name=req.name)))
 
     def make_request(self, name, method='GET', full_url=None, url_prefix=None, path='', data='', headers=None,
-                     connect_timeout=1, request_timeout=2, follow_redirects=True, **kwargs):
+                     connect_timeout=1, request_timeout=2, follow_redirects=True, safe='/,', **kwargs):
         """
         Class for easier constructing ``tornado.httpclient.HTTPRequest`` object.
 
@@ -277,9 +277,9 @@ class RequestHandler(tornado.web.RequestHandler):
         if method in ['GET', 'HEAD', 'DELETE']:
             parsed_query = urlparse.parse_qs(query)
             parsed_query.update(data if isinstance(data, dict) else urlparse.parse_qs(data))
-            query = make_qs(parsed_query)
+            query = make_qs(parsed_query, safe=safe)
         else:
-            body = make_qs(data) if isinstance(data, dict) else data
+            body = make_qs(data, safe=safe) if isinstance(data, dict) else data
 
         headers = {} if headers is None else headers
 
