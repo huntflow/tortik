@@ -9,7 +9,9 @@ python:
 env:
     - DEPS=true
     - DEPS=false
-
+before_install:
+    - sudo apt-get update
+    - sudo apt-get -y install libgnutls28-dev
 install:
     - if [[ $TRAVIS_PYTHON_VERSION == 2* && $DEPS == true ]]; then travis_retry pip install futures mock Monotime==1.0 trollius; fi
     - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then travis_retry pip install singledispatch; fi
