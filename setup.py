@@ -43,7 +43,7 @@ class BuildHook(build_py):
         with open(os.path.join(build_dir, 'version.py'), 'w') as version_file:
             version_file.write('version = "{0}"\n'.format(version))
 
-install_requires = ['tornado', 'jinja2', 'six']
+install_requires = ['tornado==5.1.1', 'MarkupSafe==1.1.0', 'jinja2==2.10', 'six']
 
 setup(
     name="tortik",
