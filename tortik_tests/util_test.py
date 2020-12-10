@@ -75,7 +75,7 @@ class TestMakeQs(BaseTest):
         self.assertQueriesEqual(make_qs(query_args, '/,'), 'a=1,2,3&b=asd')
 
     def test_make_qs_comma_quoted(self):
-        # default value for `safe` parameter of make_qs is '/,' so commas
+        # default value for `safe` parameter of make_qs is '/' so commas
         # should be encoded
         query_args = {'a': '1,2,3', 'b': 'asd'}
         self.assertQueriesEqual(make_qs(query_args), 'a=1%2C2%2C3&b=asd')
