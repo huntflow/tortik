@@ -207,7 +207,7 @@ class RequestHandler(tornado.web.RequestHandler):
             content_type = response.headers.get('Content-Type', '').split(';')[0]
             response.data = None
             self.log.debug(
-                'Got response for "%s" (code = %s, content_type = %s): %s',
+                'Got response for "%s" (code = %s, content_type = %s): %.100s',
                 name, response.code, content_type, response.body,
             )
             try:
