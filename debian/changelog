@@ -1,3 +1,9 @@
+python-tortik (0.2.7) unstable; urgency=low
+
+  * fix qureies
+
+ -- Vitaly Glibin <glibin.v@gmail.com>  Fri, 11 Dec 2020 08:36:00 +0300
+
 python-tortik (0.2.6) unstable; urgency=low
 
   * fix async
