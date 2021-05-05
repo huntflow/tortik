@@ -52,7 +52,8 @@ class PageLogger(logging.LoggerAdapter):
             self,
             tortik_log,
             {'request_id': str(request_id),
-             'event_queue': self.debug_info})
+             'event_queue': self.debug_info,
+             'handler_name': handler_name})
         self.started = time.time()
         self.request_id = request_id
         self.handler_name = handler_name
