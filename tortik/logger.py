@@ -142,7 +142,7 @@ class PageLogger(logging.LoggerAdapter):
         if stage_name not in self.stages:
             self.stages[stage_name] = PageLogger.StageInfo(time.time())
         else:
-            self.warning('Stage {} already started'.format(stage_name))
+            self.debug('Stage {} already started'.format(stage_name))
             self.stages[stage_name].counter += 1
 
     def stage_complete(self, stage_name):
