@@ -98,7 +98,7 @@ class RequestHandler(tornado.web.RequestHandler):
         self.preprocessors = copy(self.preprocessors) if hasattr(self, 'preprocessors') else []
         self.postprocessors = copy(self.postprocessors) if hasattr(self, 'postprocessors') else []
 
-        self.log.info('Using http client: %s' % repr(self.http_client))
+        self.log.debug('Using http client: %s' % repr(self.http_client))
 
         self._extra_data = {}
 
