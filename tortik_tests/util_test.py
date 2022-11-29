@@ -146,9 +146,14 @@ class TestRealIp(BaseTest):
         request = Request()
         request.headers = {'X-Real-Ip': '8.8.8.8', 'X-Forwarded-For': '10.0.0.1'}
 
-        self.assertEqual('8.8.8.8', real_ip(request))
+        self.assertEqual('10.0.0.1', real_ip(request))
 
         request = Request()
         request.headers = {'X-Forwarded-For': '10.0.0.1, 127.0.0.1'}
 
         self.assertEqual('10.0.0.1', real_ip(request))
+
+        request = Request()
+        request.headers = {'X-Real-Ip': '8.8.8.8'}
+
+        self.assertEqual('8.8.8.8', real_ip(request))
