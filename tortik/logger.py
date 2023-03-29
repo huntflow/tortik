@@ -68,28 +68,6 @@ class PageLogger(logging.LoggerAdapter):
             kwargs['extra'].update(self.extra)
         return msg, kwargs
 
-    # def cache_access_started(self, cache_name):
-    #     self.debug("Requesting cache {0}".format(cache_name), extra={_SKIP_EVENT: True})
-    #     if self.debug_info is not None:
-    #         self.debug_info[cache_name] = {
-    #             'type': 'cache',
-    #             'started': time.time(),
-    #             'name': cache_name
-    #         }
-    #
-    # def cache_access_complete(self, name, value):
-    #     if self.debug_info is not None:
-    #         event = self.debug_info.get(name)
-    #         if event is None:
-    #             self.error("Cache access response is not found: {0}".format(name))
-    #         else:
-    #             now = time.time()
-    #             event.update({
-    #                 'completed': now,
-    #                 'took': now - event['started'],
-    #                 'value': repr(value),
-    #                 })
-
     def request_started(self, request):
         self.debug('Requesting {} {}'.format(request.method, request.url), extra={_SKIP_EVENT: True})
         if self.debug_info is not None:
@@ -126,14 +104,16 @@ class PageLogger(logging.LoggerAdapter):
                 })
 
         level = logging.DEBUG
+        extra_data = {}
         if 400 <= resp.code < 500:
             level = logging.INFO
         elif resp.code >= 500:
             level = logging.ERROR
+            extra_data["req_body"] = resp.request.body
 
-        self.log(level, 'Complete {} {} {} in {}ms'.format(resp.code, resp.request.method, resp.request.url,
-                                                           int(resp.request_time * 1000.0)),
-                 extra={_SKIP_EVENT: True})
+        self.log(level, 'Complete %s %s %s in %sms', resp.code, resp.request.method, resp.request.url,
+                                                           int(resp.request_time * 1000.0),
+                 extra={_SKIP_EVENT: True, **extra_data})
 
     def add_metric(self, name, value):
         self.metrics[name] = value

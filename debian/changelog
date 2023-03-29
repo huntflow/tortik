@@ -1,3 +1,9 @@
+python-tortik (0.2.11) unstable; urgency=low
+
+   * better logging
+
+  -- Nikita Kotov <kotov@huntflow.ru>  Wed, 29 Mar 2023 11:30:00 +0300
+
 python-tortik (0.2.10) unstable; urgency=low
 
    * сhanged x-forwarded-for headers ordering
