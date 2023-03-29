@@ -22,8 +22,8 @@ extensions = [
     "sphinx.ext.viewcode",
 ]
 
-primary_domain = 'py'
-default_role = 'py:obj'
+primary_domain = "py"
+default_role = "py:obj"
 
 autodoc_member_order = "bysource"
 autoclass_content = "both"
@@ -34,22 +34,23 @@ autoclass_content = "both"
 autodoc_docstring_signature = False
 
 coverage_skip_undoc_in_source = True
-coverage_ignore_modules = [
-
-]
+coverage_ignore_modules = []
 # I wish this could go in a per-module file...
-coverage_ignore_classes = [
+coverage_ignore_classes = []
 
-]
+coverage_ignore_functions = []
 
-coverage_ignore_functions = [
-
-]
-
-html_favicon = 'favicon.ico'
+html_favicon = "favicon.ico"
 
 latex_documents = [
-    ('index', 'tortik.tex', 'Tortik Documentation', 'The Tortik Authors', 'manual', False),
+    (
+        "index",
+        "tortik.tex",
+        "Tortik Documentation",
+        "The Tortik Authors",
+        "manual",
+        False,
+    ),
 ]
 
 # HACK: sphinx has limited support for substitutions with the |version|
@@ -59,20 +60,19 @@ latex_documents = [
 # The extlink extension can be used to do link substitutions, but it requires a
 # portion of the url to be literally contained in the document.  Therefore,
 # this link must be referenced as :current_tarball:`z`
-extlinks = {
-
-}
+extlinks = {}
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/2.7/', None),
+    "python": ("https://docs.python.org/2.7/", None),
 }
 
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 
 # On RTD we can't import sphinx_rtd_theme, but it will be applied by
 # default anyway.  This block will use the same theme when building locally
 # as on RTD.
 if not on_rtd:
     import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
+
+    html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]

@@ -32,18 +32,22 @@ class TestCommand(Command):
 
     def run(self):
         import nose
-        nose.main(argv=['nosetests', 'tortik_tests/'])
+
+        nose.main(argv=["nosetests", "tortik_tests/"])
 
 
 class BuildHook(build_py):
     def run(self):
         build_py.run(self)
 
-        build_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.build_lib, 'tortik')
-        with open(os.path.join(build_dir, 'version.py'), 'w') as version_file:
+        build_dir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), self.build_lib, "tortik"
+        )
+        with open(os.path.join(build_dir, "version.py"), "w") as version_file:
             version_file.write('version = "{0}"\n'.format(version))
 
-install_requires = ['tornado==5.1.1', 'MarkupSafe==1.1.0', 'jinja2==2.10', 'six']
+
+install_requires = ["tornado==5.1.1", "MarkupSafe==1.1.0", "jinja2==2.10", "six"]
 
 setup(
     name="tortik",
@@ -51,22 +55,22 @@ setup(
     description="Tortik - python tornado framework",
     long_description=open("README.rst").read(),
     url="https://github.com/glibin/tortik",
-    download_url='https://github.com/glibin/tortik/tarball/{}'.format(version),
-    packages=find_packages(exclude=['tortik_tests', 'tortik_tests.*']),
+    download_url="https://github.com/glibin/tortik/tarball/{}".format(version),
+    packages=find_packages(exclude=["tortik_tests", "tortik_tests.*"]),
     package_data={
         "tortik": find_package_data("tortik", "templates"),
     },
-    cmdclass={'test': TestCommand, 'build_py': BuildHook},
+    cmdclass={"test": TestCommand, "build_py": BuildHook},
     install_requires=install_requires,
-    setup_requires=['nose', 'pep8'],
+    setup_requires=["nose", "pep8"],
     classifiers=[
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
     ],
 )

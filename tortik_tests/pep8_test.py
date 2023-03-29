@@ -5,8 +5,11 @@ import unittest
 
 import pep8
 
-_project_root = path.abspath(path.join(path.dirname(__file__), '..'))
-_src_dirs = map(lambda x: path.join(_project_root, x), ['tortik', 'tortik_tests', 'examples', 'setup.py'])
+_project_root = path.abspath(path.join(path.dirname(__file__), ".."))
+_src_dirs = map(
+    lambda x: path.join(_project_root, x),
+    ["tortik", "tortik_tests", "examples", "setup.py"],
+)
 
 
 class Pep8TestCase(unittest.TestCase):
@@ -19,4 +22,6 @@ class Pep8TestCase(unittest.TestCase):
         )
         result = pep8style.check_files(_src_dirs)
 
-        self.assertEqual(result.total_errors, 0, 'Pep8 found code style errors or warnings')
+        self.assertEqual(
+            result.total_errors, 0, "Pep8 found code style errors or warnings"
+        )

@@ -6,7 +6,7 @@ native_etree = False
 try:
     from lxml import etree
 except ImportError:
-    tortik_log.info('lxml not installed. Using native etree implementation')
+    tortik_log.info("lxml not installed. Using native etree implementation")
     native_etree = True
     import xml.etree.ElementTree as etree
 
@@ -19,7 +19,7 @@ def parse(source, parser=None):
 
 
 def tostring(element, **kwargs):
-    native_args = ['encoding', 'method']
+    native_args = ["encoding", "method"]
     if native_etree is True:
         pass_args = dict()
         for a in native_args:

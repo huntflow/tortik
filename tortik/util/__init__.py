@@ -18,11 +18,14 @@ def decorate_all(decorator_list):
     def is_method_need_to_decorate(func_name, func_obj, check_param):
         """check if an object should be decorated"""
         methods = ["get", "head", "post", "put", "delete", "patch"]
-        return (func_name in methods and
-                isinstance(func_obj, FunctionType) and
-                getattr(func_obj, check_param, True))
+        return (
+            func_name in methods
+            and isinstance(func_obj, FunctionType)
+            and getattr(func_obj, check_param, True)
+        )
 
     """decorate all instance methods (unless excluded) with the same decorator"""
+
     class DecorateAll(type):
         def __new__(cls, name, bases, dct):
             for func_name, func_obj in dct.items():
@@ -38,6 +41,7 @@ def decorate_all(decorator_list):
                 if is_method_need_to_decorate(func_name, func_obj, check_param):
                     func_obj = decorator(func_obj)
             super(DecorateAll, self).__setattr__(func_name, func_obj)
+
     return DecorateAll
 
 
@@ -50,8 +54,12 @@ def make_list(val):
 
 def real_ip(request):
     # split is for X-Forwarded-For header that can consist of many IPs: X-Forwarded-For: client, proxy1, proxy2
-    return (request.headers.get('X-Forwarded-For', None) or request.headers.get('X-Real-Ip', None) or
-            request.remote_ip or '127.0.0.1').split(',')[0]
+    return (
+        request.headers.get("X-Forwarded-For", None)
+        or request.headers.get("X-Real-Ip", None)
+        or request.remote_ip
+        or "127.0.0.1"
+    ).split(",")[0]
 
 
 HTTPError = tornado.web.HTTPError
@@ -59,11 +67,11 @@ ITERABLE = (set, frozenset, list, tuple)
 
 
 def update_url(url, update_args=None, remove_args=None):
-    scheme, sep, url_new = url.partition('://')
+    scheme, sep, url_new = url.partition("://")
     if len(scheme) == len(url):
-        scheme = ''
+        scheme = ""
     else:
-        url = '//' + url_new
+        url = "//" + url_new
 
     url_split = urlparse.urlsplit(url)
     query_dict = urlparse.parse_qs(url_split.query, keep_blank_values=True)
@@ -74,20 +82,24 @@ def update_url(url, update_args=None, remove_args=None):
 
     # remove args
     if remove_args:
-        query_dict = dict([(k, query_dict.get(k)) for k in query_dict if k not in remove_args])
+        query_dict = dict(
+            [(k, query_dict.get(k)) for k in query_dict if k not in remove_args]
+        )
 
     query = make_qs(query_dict)
-    return urlparse.urlunsplit((scheme, url_split.netloc, url_split.path, query, url_split.fragment))
+    return urlparse.urlunsplit(
+        (scheme, url_split.netloc, url_split.path, query, url_split.fragment)
+    )
 
 
 def _encode(s):
     if isinstance(s, unicode_type):
-        return s.encode('utf-8')
+        return s.encode("utf-8")
     else:
         return s
 
 
-def make_qs(query_args, safe='/'):
+def make_qs(query_args, safe="/"):
     kv_pairs = []
     for key, val in query_args.items():
         if val is not None:

@@ -9,26 +9,32 @@ from tornado.options import options, define
 
 from tortik.util.dumper import request_to_curl_string
 
-LOGGER_NAME = 'tortik'
-_SKIP_EVENT = 'skip_event'
+LOGGER_NAME = "tortik"
+_SKIP_EVENT = "skip_event"
 
 tortik_log = logging.getLogger(LOGGER_NAME)
 
 
-define('tortik_logformat', default='[%(process)s %(asctime)s %(levelname)s %(name)s] %(message)s')
+define(
+    "tortik_logformat",
+    default="[%(process)s %(asctime)s %(levelname)s %(name)s] %(message)s",
+)
 
 
 class RequestIdFilter(logging.Filter):
     def filter(self, record):
-        record.name = '.'.join(filter(None, [record.name, getattr(record, 'request_id', None)]))
-        event_queue = getattr(record, 'event_queue', None)
+        record.name = ".".join(
+            filter(None, [record.name, getattr(record, "request_id", None)])
+        )
+        event_queue = getattr(record, "event_queue", None)
         if event_queue is not None and getattr(record, _SKIP_EVENT, None) is None:
             created = record.created or time.time()
             event_queue[record] = {
-                'created': str(datetime.fromtimestamp(created).time()),
-                'msg': record.getMessage(),
-                'exc_info': record.exc_info,
-                'type': record.levelname}
+                "created": str(datetime.fromtimestamp(created).time()),
+                "msg": record.getMessage(),
+                "exc_info": record.exc_info,
+                "type": record.levelname,
+            }
         return True
 
 
@@ -41,9 +47,9 @@ class PageLogger(logging.LoggerAdapter):
 
         def __str__(self):
             if self.end:
-                return '{0:.2f}'.format(1000 * (self.end - self.start))
+                return "{0:.2f}".format(1000 * (self.end - self.start))
             else:
-                return 'infinite'
+                return "infinite"
 
     def __init__(self, request, request_id, use_debug, handler_name):
         self.debug_info = OrderedDict() if use_debug else None
@@ -51,36 +57,42 @@ class PageLogger(logging.LoggerAdapter):
         logging.LoggerAdapter.__init__(
             self,
             tortik_log,
-            {'request_id': str(request_id),
-             'event_queue': self.debug_info})
+            {"request_id": str(request_id), "event_queue": self.debug_info},
+        )
         self.started = time.time()
         self.request_id = request_id
         self.handler_name = handler_name
         self.stages = OrderedDict()
         self.metrics = OrderedDict()
-        self.debug('Started {} {}'.format(request.method, request.uri), extra={_SKIP_EVENT: True})
+        self.debug(
+            "Started {} {}".format(request.method, request.uri),
+            extra={_SKIP_EVENT: True},
+        )
         self._completed = False
 
     def process(self, msg, kwargs):
-        if 'extra' not in kwargs:
-            kwargs['extra'] = self.extra
+        if "extra" not in kwargs:
+            kwargs["extra"] = self.extra
         else:
-            kwargs['extra'].update(self.extra)
+            kwargs["extra"].update(self.extra)
         return msg, kwargs
 
     def request_started(self, request):
-        self.debug('Requesting {} {}'.format(request.method, request.url), extra={_SKIP_EVENT: True})
+        self.debug(
+            "Requesting {} {}".format(request.method, request.url),
+            extra={_SKIP_EVENT: True},
+        )
         if self.debug_info is not None:
             event = {
-                'type': 'NET',
-                'started': time.time(),
-                'request': {
-                    'url': request.url,
-                    'method': request.method,
-                    'headers': request.headers,
-                    'data': request.body,
-                    'curl': request_to_curl_string(request)
-                }
+                "type": "NET",
+                "started": time.time(),
+                "request": {
+                    "url": request.url,
+                    "method": request.method,
+                    "headers": request.headers,
+                    "data": request.body,
+                    "curl": request_to_curl_string(request),
+                },
             }
             self.debug_info[request] = event
 
@@ -88,20 +100,24 @@ class PageLogger(logging.LoggerAdapter):
         if self.debug_info is not None:
             event = self.debug_info.get(resp.request, None)
             if event is None:
-                self.error('Request for response is not found: {}'.format(resp.request.url))
+                self.error(
+                    "Request for response is not found: {}".format(resp.request.url)
+                )
             else:
                 now = time.time()
-                event.update({
-                    'completed': now,
-                    'took': now - event['started'],
-                    'time_info': getattr(resp, 'time_info', None),
-                    'response': {
-                        'code': resp.code,
-                        'headers': resp.headers,
-                        'body': resp.body,
-                        'data': resp.data
-                    },
-                })
+                event.update(
+                    {
+                        "completed": now,
+                        "took": now - event["started"],
+                        "time_info": getattr(resp, "time_info", None),
+                        "response": {
+                            "code": resp.code,
+                            "headers": resp.headers,
+                            "body": resp.body,
+                            "data": resp.data,
+                        },
+                    }
+                )
 
         level = logging.DEBUG
         extra_data = {}
@@ -111,9 +127,15 @@ class PageLogger(logging.LoggerAdapter):
             level = logging.ERROR
             extra_data["req_body"] = resp.request.body
 
-        self.log(level, 'Complete %s %s %s in %sms', resp.code, resp.request.method, resp.request.url,
-                                                           int(resp.request_time * 1000.0),
-                 extra={_SKIP_EVENT: True, **extra_data})
+        self.log(
+            level,
+            "Complete %s %s %s in %sms",
+            resp.code,
+            resp.request.method,
+            resp.request.url,
+            int(resp.request_time * 1000.0),
+            extra={_SKIP_EVENT: True, **extra_data},
+        )
 
     def add_metric(self, name, value):
         self.metrics[name] = value
@@ -122,7 +144,7 @@ class PageLogger(logging.LoggerAdapter):
         if stage_name not in self.stages:
             self.stages[stage_name] = PageLogger.StageInfo(time.time())
         else:
-            self.debug('Stage {} already started'.format(stage_name))
+            self.debug("Stage {} already started".format(stage_name))
             self.stages[stage_name].counter += 1
 
     def stage_complete(self, stage_name):
@@ -130,11 +152,13 @@ class PageLogger(logging.LoggerAdapter):
             stage = self.stages[stage_name]
             stage.counter -= 1
             if stage.counter < 0:
-                self.error('Freed stage {} more times then it is needed'.format(stage_name))
+                self.error(
+                    "Freed stage {} more times then it is needed".format(stage_name)
+                )
             elif stage.counter == 0:
                 self.stages[stage_name].end = time.time()
         else:
-            self.error('Stage {} was not stared'.format(stage_name))
+            self.error("Stage {} was not stared".format(stage_name))
 
     def complete_logging(self, status_code, additional_data=None):
         if self._completed:
@@ -143,14 +167,22 @@ class PageLogger(logging.LoggerAdapter):
         if additional_data is None:
             additional_data = []
 
-        data = [
-            ('handler', self.handler_name),
-            ('method', self.request.method),
-            ('code', status_code),
-            ('total', int(1000 * self.request.request_time()))  # <current_time> - <start> if request not finished yet
-        ] + list(self.stages.items()) + list(self.metrics.items()) + additional_data
+        data = (
+            [
+                ("handler", self.handler_name),
+                ("method", self.request.method),
+                ("code", status_code),
+                (
+                    "total",
+                    int(1000 * self.request.request_time()),
+                ),  # <current_time> - <start> if request not finished yet
+            ]
+            + list(self.stages.items())
+            + list(self.metrics.items())
+            + additional_data
+        )
 
-        self.info('MONIK {}'.format(' '.join('{}={}'.format(k, v) for (k, v) in data)))
+        self.info("MONIK {}".format(" ".join("{}={}".format(k, v) for (k, v) in data)))
 
         self._completed = True
 
