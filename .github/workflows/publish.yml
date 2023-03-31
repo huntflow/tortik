@@ -2,6 +2,8 @@ name: Publish to pypi
 on:
   release:
     types: [ published ]
+permissions:
+  id-token: write
 
 jobs:
   build-n-publish:
