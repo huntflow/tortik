@@ -120,7 +120,7 @@ class PageLogger(logging.LoggerAdapter):
                 )
 
         level = logging.DEBUG
-        extra_data = {}
+        extra_data = {_SKIP_EVENT: True}
         if 400 <= resp.code < 500:
             level = logging.INFO
         elif resp.code >= 500:
@@ -134,7 +134,7 @@ class PageLogger(logging.LoggerAdapter):
             resp.request.method,
             resp.request.url,
             int(resp.request_time * 1000.0),
-            extra={_SKIP_EVENT: True, **extra_data},
+            extra=extra_data,
         )
 
     def add_metric(self, name, value):

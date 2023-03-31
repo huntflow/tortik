@@ -69,10 +69,9 @@ class XmlDebugHandler(MainHandler):
             self.make_request(
                 name="xml",
                 method="GET",
-                full_url=self.request.protocol
-                + "://"
-                + self.request.host
-                + "/mock/xml",
+                full_url="{}://{}/mock/xml".format(
+                    self.request.protocol, self.request.host
+                ),
                 request_timeout=0.2,
             ),
             callback=handle_request,
@@ -133,7 +132,8 @@ class DebugHTTPTestCase(AsyncHTTPTestCase):
     def tearDown(self):
         options.debug = self._old_debug
         options.debug_password = self._old_debug_password
-        super(DebugHTTPTestCase, self).tearDown()
+        # WTF it works like that???
+        # super(DebugHTTPTestCase, self).tearDown()
 
     def get_app(self):
         return Application()
@@ -178,7 +178,7 @@ class DebugPasswordHTTPTestCase(AsyncHTTPTestCase):
     def tearDown(self):
         options.debug = self._old_debug
         options.debug_password = self._old_debug_password
-        super(DebugPasswordHTTPTestCase, self).tearDown()
+        # super(DebugPasswordHTTPTestCase, self).tearDown()
 
     def get_app(self):
         return Application()
@@ -228,7 +228,7 @@ class DebugTurnedOffHTTPTestCase(AsyncHTTPTestCase):
 
     def tearDown(self):
         options.debug = self._old_debug
-        super(DebugTurnedOffHTTPTestCase, self).tearDown()
+        # super(DebugTurnedOffHTTPTestCase, self).tearDown()
 
     def get_app(self):
         return Application()

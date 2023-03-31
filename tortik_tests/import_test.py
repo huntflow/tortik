@@ -49,4 +49,3 @@ class ImportAllPythonCodeTestCase(unittest.TestCase):
                         else:
                             module = base_name + module
                         yield module, full_path, rel_path
-        raise StopIteration()
