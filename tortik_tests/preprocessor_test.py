@@ -6,7 +6,7 @@ import tornado.web
 import tornado.ioloop
 import tornado.curl_httpclient
 from tornado.escape import json_decode
-from tornado.testing import AsyncHTTPTestCase
+from tornado.testing import AsyncHTTPTestCase, gen_test
 
 from tortik.page import RequestHandler
 
@@ -85,8 +85,8 @@ class PreprocessorHTTPTestCase(AsyncHTTPTestCase):
     def get_new_ioloop(self):
         return tornado.ioloop.IOLoop.instance()
 
+    @gen_test
     def test_main(self):
-        self.http_client.fetch(self.get_url("/"), self.stop)
-        response = self.wait()
+        response = yield self.http_client.fetch(self.get_url("/"))
         self.assertEqual(200, response.code)
         self.assertIn(b"ok", response.body)

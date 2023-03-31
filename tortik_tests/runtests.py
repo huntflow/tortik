@@ -84,6 +84,30 @@ def main():
     # our dependencies do (last match wins).
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     warnings.filterwarnings("error", category=DeprecationWarning, module=r"tornado\..*")
+    warnings.filterwarnings(
+        "ignore",
+        category=DeprecationWarning,
+        module=r"tornado\..*",
+        message="gen.Task is deprecated",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        category=DeprecationWarning,
+        module=r"tornado\..*",
+        message="StackContext is deprecated",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        category=DeprecationWarning,
+        module=r"tornado\..*",
+        message="@asynchronous is deprecated",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        category=DeprecationWarning,
+        module=r"tornado\..*",
+        message="callback arguments are deprecated",
+    )
     warnings.filterwarnings("ignore", category=PendingDeprecationWarning)
     warnings.filterwarnings(
         "error", category=PendingDeprecationWarning, module=r"tornado\..*"

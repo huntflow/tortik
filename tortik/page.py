@@ -62,7 +62,7 @@ def _gen_requestid():
 
 _decorates = decorate_all(
     [
-        (tornado.web.asynchronous, "asynchronous"),  # should be the last
+        (tornado.web.gen.coroutine, "coroutine"),  # should be the last
     ]
 )
 
@@ -265,7 +265,7 @@ class RequestHandler(tornado.web.RequestHandler):
                     response.data = parse_xml(response)
                 elif content_type == "application/json":
                     response.data = parse_json(response)
-            except:
+            except Exception:
                 self.log.warning("Could not parse response with Content-Type header")
 
             if response.data is not None:

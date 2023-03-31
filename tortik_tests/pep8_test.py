@@ -3,7 +3,7 @@
 from os import path
 import unittest
 
-import pep8
+import pycodestyle
 
 _project_root = path.abspath(path.join(path.dirname(__file__), ".."))
 _src_dirs = map(
@@ -14,7 +14,7 @@ _src_dirs = map(
 
 class Pep8TestCase(unittest.TestCase):
     def test_pep8(self):
-        pep8style = pep8.StyleGuide(
+        pep8style = pycodestyle.StyleGuide(
             show_pep8=False,
             show_source=True,
             max_line_length=120,
