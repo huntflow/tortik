@@ -47,7 +47,14 @@ class BuildHook(build_py):
             version_file.write('version = "{0}"\n'.format(version))
 
 
-install_requires = ["tornado==5.1.1", "MarkupSafe==1.1.0", "jinja2==2.10", "six"]
+install_requires = [
+    "tornado>=5.0,<=5.1.1",
+    "pycurl>=7.19.0",
+    "lxml>=2.2.8",
+    "jinja2>2,<3",
+    "six",
+    "MarkupSafe<2.1.0",
+]
 
 setup(
     name="tortik",
@@ -66,11 +73,8 @@ setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.7",
     ],
 )
