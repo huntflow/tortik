@@ -22,3 +22,14 @@ jobs:
         run: pip install -r maint/requirements.txt && pip install -r maint/requirements_dev.txt
       - name: Run tests
         run: python -m tortik_tests.runtests
+  black:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+      - name: setup black
+        run: pip install black
+      - name: check
+        run: black .
