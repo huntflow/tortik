@@ -3,12 +3,6 @@ Tortik
 
 Tortik is a frontend micro framework atop of Python Tornado making easier to develop SOA-based applications.
 
-.. image:: https://travis-ci.org/glibin/tortik.svg
-    :target: https://travis-ci.org/glibin/tortik
-
-.. image:: https://coveralls.io/repos/glibin/tortik/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/glibin/tortik?branch=master
-
 .. image:: https://img.shields.io/pypi/pyversions/tortik.svg
     :target: https://pypi.python.org/pypi/tortik/
 
