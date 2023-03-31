@@ -1,0 +1,23 @@
+name: Test
+on:
+  pull_request:
+  push: { branches: master }
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '2.7', '3.3', '3.5', '3.7' ]
+    name: Python ${{ matrix.python-version }} sample
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - name: Setup python
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+        run: pip install -r maint/requirements.txt && pip install -r maint/requirements_dev.txt
+      - name: Run tests
+        run: python -m tortik_tests.runtests
