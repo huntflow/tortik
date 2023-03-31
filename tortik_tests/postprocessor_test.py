@@ -7,11 +7,11 @@ import tornado.curl_httpclient
 
 
 def first_postprocessor(handler, data, callback):
-    callback(handler, data.replace('Hello,', 'Good'))
+    callback(handler, data.replace("Hello,", "Good"))
 
 
 def second_postprocessor(handler, data, callback):
-    callback(handler, data.replace('Good world', 'Good bye'))
+    callback(handler, data.replace("Good world", "Good bye"))
 
 
 class MainHandler(RequestHandler):
@@ -21,13 +21,13 @@ class MainHandler(RequestHandler):
     ]
 
     def get(self):
-        self.complete('Hello, world!')
+        self.complete("Hello, world!")
 
 
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r'/', MainHandler),
+            (r"/", MainHandler),
         ]
 
         settings = dict(
@@ -44,7 +44,7 @@ class PostprocessorHTTPTestCase(AsyncHTTPTestCase):
         return tornado.ioloop.IOLoop.instance()
 
     def test_main(self):
-        self.http_client.fetch(self.get_url('/'), self.stop)
+        self.http_client.fetch(self.get_url("/"), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn(b'Good bye!', response.body)
+        self.assertIn(b"Good bye!", response.body)

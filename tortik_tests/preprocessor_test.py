@@ -17,8 +17,11 @@ def first_preprocessor(handler, callback):
         callback()
 
     http_client = tornado.curl_httpclient.CurlAsyncHTTPClient()
-    http_client.fetch(handler.request.protocol + "://" + handler.request.host + '/mock/json',
-                      handle_request, request_timeout=0.2)
+    http_client.fetch(
+        handler.request.protocol + "://" + handler.request.host + "/mock/json",
+        handle_request,
+        request_timeout=0.2,
+    )
 
 
 def second_preprocessor(handler, callback):
@@ -27,8 +30,11 @@ def second_preprocessor(handler, callback):
         callback()
 
     http_client = tornado.curl_httpclient.CurlAsyncHTTPClient()
-    http_client.fetch(handler.request.protocol + "://" + handler.request.host + '/mock/json',
-                      handle_request, request_timeout=0.2)
+    http_client.fetch(
+        handler.request.protocol + "://" + handler.request.host + "/mock/json",
+        handle_request,
+        request_timeout=0.2,
+    )
 
 
 def third_preprocessor(handler, callback):
@@ -38,15 +44,11 @@ def third_preprocessor(handler, callback):
 
 
 class MainHandler(RequestHandler):
-    preprocessors = [
-        first_preprocessor,
-        second_preprocessor,
-        third_preprocessor
-    ]
+    preprocessors = [first_preprocessor, second_preprocessor, third_preprocessor]
 
     def get(self):
         if self.first and self.second and self.third:
-            self.complete({'status': 'ok'})
+            self.complete({"status": "ok"})
         else:
             raise tornado.web.HTTPError(500)
 
@@ -54,7 +56,7 @@ class MainHandler(RequestHandler):
 class MockJsonHandler(tornado.web.RequestHandler):
     @staticmethod
     def mock_data():
-        fd = open(os.path.join(os.path.dirname(__file__), 'data', 'simple.json'), 'r')
+        fd = open(os.path.join(os.path.dirname(__file__), "data", "simple.json"), "r")
         data = json_decode(fd.read())
         fd.close()
         return data
@@ -66,7 +68,7 @@ class MockJsonHandler(tornado.web.RequestHandler):
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r'/', MainHandler),
+            (r"/", MainHandler),
             (r"/mock/json", MockJsonHandler),
         ]
 
@@ -84,7 +86,7 @@ class PreprocessorHTTPTestCase(AsyncHTTPTestCase):
         return tornado.ioloop.IOLoop.instance()
 
     def test_main(self):
-        self.http_client.fetch(self.get_url('/'), self.stop)
+        self.http_client.fetch(self.get_url("/"), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn(b'ok', response.body)
+        self.assertIn(b"ok", response.body)

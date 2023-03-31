@@ -13,71 +13,76 @@ import tortik.logger
 
 def preprocessor(handler, callback):
     def handle_request():
-        handler.log.info('Log from preprocessor')
+        handler.log.info("Log from preprocessor")
         callback()
 
     handler.fetch_requests(
         [
             handler.make_request(
-                name='mock_json',
-                method='GET',
-                full_url=handler.request.protocol + "://" + handler.request.host + '/mock/json',
-                request_timeout=0.2
+                name="mock_json",
+                method="GET",
+                full_url=handler.request.protocol
+                + "://"
+                + handler.request.host
+                + "/mock/json",
+                request_timeout=0.2,
             ),
             handler.make_request(
-                name='mock_xml',
-                method='GET',
-                full_url=handler.request.protocol + "://" + handler.request.host + '/mock/xml',
-                request_timeout=0.2
-            )
+                name="mock_xml",
+                method="GET",
+                full_url=handler.request.protocol
+                + "://"
+                + handler.request.host
+                + "/mock/xml",
+                request_timeout=0.2,
+            ),
         ],
-        callback=handle_request
+        callback=handle_request,
     )
 
 
 def postprocessor(handler, data, callback):
-    handler.log.info('Log from postprocessor')
+    handler.log.info("Log from postprocessor")
     callback(handler, data)
 
 
 class MainHandler(RequestHandler):
-    preprocessors = [
-        preprocessor
-    ]
-    postprocessors = [
-        postprocessor
-    ]
+    preprocessors = [preprocessor]
+    postprocessors = [postprocessor]
 
     def get(self):
-        self.complete('Hello, world!')
+        self.complete("Hello, world!")
 
 
 class ExceptionHandler(MainHandler):
     def get(self):
         test = 1 / 0
-        self.complete('Hello, world!')
+        self.complete("Hello, world!")
 
 
 class XmlDebugHandler(MainHandler):
     def get(self):
         def handle_request():
-            self.complete('Hello, world!')
+            self.complete("Hello, world!")
 
         self.fetch_requests(
             self.make_request(
-                name='xml',
-                method='GET',
-                full_url=self.request.protocol + "://" + self.request.host + '/mock/xml',
-                request_timeout=0.2
+                name="xml",
+                method="GET",
+                full_url=self.request.protocol
+                + "://"
+                + self.request.host
+                + "/mock/xml",
+                request_timeout=0.2,
             ),
-            callback=handle_request
+            callback=handle_request,
         )
 
 
 class MockJsonHandler(tornado.web.RequestHandler):
     @staticmethod
     def mock_data():
-        fd = open(os.path.join(os.path.dirname(__file__), 'data', 'simple.json'), 'r')
+        fd = open(os.path.join(os.path.dirname(__file__), "data", "simple.json"), "r")
         data = json_decode(fd.read())
         fd.close()
         return data
@@ -89,13 +94,13 @@ class MockJsonHandler(tornado.web.RequestHandler):
 class MockXmlHandler(tornado.web.RequestHandler):
     @staticmethod
     def mock_data():
-        fd = open(os.path.join(os.path.dirname(__file__), 'data', 'simple.xml'), 'r')
+        fd = open(os.path.join(os.path.dirname(__file__), "data", "simple.xml"), "r")
         data = fd.read()
         fd.close()
         return data
 
     def get(self):
-        self.set_header('Content-Type', 'application/xml')
+        self.set_header("Content-Type", "application/xml")
         self.finish(self.mock_data())
 
 
@@ -121,7 +126,7 @@ class DebugHTTPTestCase(AsyncHTTPTestCase):
         self._old_debug = options.debug
         self._old_debug_password = options.debug_password
         options.debug = True
-        options.debug_password = ''
+        options.debug_password = ""
 
         super(DebugHTTPTestCase, self).setUp()
 
@@ -137,28 +142,28 @@ class DebugHTTPTestCase(AsyncHTTPTestCase):
         return tornado.ioloop.IOLoop.instance()
 
     def test_main(self):
-        self.http_client.fetch(self.get_url('/?debug'), self.stop)
+        self.http_client.fetch(self.get_url("/?debug"), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn(b'Log from preprocessor', response.body)
-        self.assertIn(b'Log from postprocessor', response.body)
-        self.assertIn(b'/mock/json', response.body)
+        self.assertIn(b"Log from preprocessor", response.body)
+        self.assertIn(b"Log from postprocessor", response.body)
+        self.assertIn(b"/mock/json", response.body)
 
     def test_exception(self):
-        self.http_client.fetch(self.get_url('/exception'), self.stop)
+        self.http_client.fetch(self.get_url("/exception"), self.stop)
         response = self.wait()
         self.assertEqual(500, response.code)
-        self.assertIn(b'Log from preprocessor', response.body)
-        self.assertNotIn(b'Log from postprocessor', response.body)
-        self.assertIn(b'/mock/json', response.body)
-        self.assertIn(b'ZeroDivisionError', response.body)
+        self.assertIn(b"Log from preprocessor", response.body)
+        self.assertNotIn(b"Log from postprocessor", response.body)
+        self.assertIn(b"/mock/json", response.body)
+        self.assertIn(b"ZeroDivisionError", response.body)
 
     def test_debug_exception(self):
-        self.http_client.fetch(self.get_url('/exception?debug'), self.stop)
+        self.http_client.fetch(self.get_url("/exception?debug"), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn(b'code=500', response.body)
-        self.assertIn(b'ZeroDivisionError', response.body)
+        self.assertIn(b"code=500", response.body)
+        self.assertIn(b"ZeroDivisionError", response.body)
 
 
 class DebugPasswordHTTPTestCase(AsyncHTTPTestCase):
@@ -166,7 +171,7 @@ class DebugPasswordHTTPTestCase(AsyncHTTPTestCase):
         self._old_debug = options.debug
         self._old_debug_password = options.debug_password
         options.debug = False
-        options.debug_password = '123'
+        options.debug_password = "123"
 
         super(DebugPasswordHTTPTestCase, self).setUp()
 
@@ -182,37 +187,37 @@ class DebugPasswordHTTPTestCase(AsyncHTTPTestCase):
         return tornado.ioloop.IOLoop.instance()
 
     def test_debug_false(self):
-        self.http_client.fetch(self.get_url('/?debug'), self.stop)
+        self.http_client.fetch(self.get_url("/?debug"), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertNotIn(b'Log from preprocessor', response.body)
-        self.assertNotIn(b'Log from postprocessor', response.body)
-        self.assertNotIn(b'/mock/json', response.body)
-        self.assertIn(b'Hello, world!', response.body)
+        self.assertNotIn(b"Log from preprocessor", response.body)
+        self.assertNotIn(b"Log from postprocessor", response.body)
+        self.assertNotIn(b"/mock/json", response.body)
+        self.assertIn(b"Hello, world!", response.body)
 
     def test_debug_true(self):
-        self.http_client.fetch(self.get_url('/?debug=123'), self.stop)
+        self.http_client.fetch(self.get_url("/?debug=123"), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn(b'Log from preprocessor', response.body)
-        self.assertIn(b'Log from postprocessor', response.body)
-        self.assertIn(b'/mock/json', response.body)
+        self.assertIn(b"Log from preprocessor", response.body)
+        self.assertIn(b"Log from postprocessor", response.body)
+        self.assertIn(b"/mock/json", response.body)
 
     def test_exception(self):
-        self.http_client.fetch(self.get_url('/exception'), self.stop)
+        self.http_client.fetch(self.get_url("/exception"), self.stop)
         response = self.wait()
         self.assertEqual(500, response.code)
-        self.assertNotIn(b'Log from preprocessor', response.body)
-        self.assertNotIn(b'Log from postprocessor', response.body)
-        self.assertNotIn(b'/mock/json', response.body)
-        self.assertNotIn(b'Hello, world!', response.body)
+        self.assertNotIn(b"Log from preprocessor", response.body)
+        self.assertNotIn(b"Log from postprocessor", response.body)
+        self.assertNotIn(b"/mock/json", response.body)
+        self.assertNotIn(b"Hello, world!", response.body)
 
     def test_debug_exception(self):
-        self.http_client.fetch(self.get_url('/exception?debug=123'), self.stop)
+        self.http_client.fetch(self.get_url("/exception?debug=123"), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertIn(b'code=500', response.body)
-        self.assertIn(b'ZeroDivisionError', response.body)
+        self.assertIn(b"code=500", response.body)
+        self.assertIn(b"ZeroDivisionError", response.body)
 
 
 class DebugTurnedOffHTTPTestCase(AsyncHTTPTestCase):
@@ -232,19 +237,19 @@ class DebugTurnedOffHTTPTestCase(AsyncHTTPTestCase):
         return tornado.ioloop.IOLoop.instance()
 
     def test_debug(self):
-        self.http_client.fetch(self.get_url('/?debug'), self.stop)
+        self.http_client.fetch(self.get_url("/?debug"), self.stop)
         response = self.wait()
         self.assertEqual(200, response.code)
-        self.assertNotIn(b'Log from preprocessor', response.body)
-        self.assertNotIn(b'Log from postprocessor', response.body)
-        self.assertNotIn(b'/mock/json', response.body)
-        self.assertIn(b'Hello, world!', response.body)
+        self.assertNotIn(b"Log from preprocessor", response.body)
+        self.assertNotIn(b"Log from postprocessor", response.body)
+        self.assertNotIn(b"/mock/json", response.body)
+        self.assertIn(b"Hello, world!", response.body)
 
     def test_debug_exception(self):
-        self.http_client.fetch(self.get_url('/exception'), self.stop)
+        self.http_client.fetch(self.get_url("/exception"), self.stop)
         response = self.wait()
         self.assertEqual(500, response.code)
-        self.assertNotIn(b'Log from preprocessor', response.body)
-        self.assertNotIn(b'Log from postprocessor', response.body)
-        self.assertNotIn(b'/mock/json', response.body)
-        self.assertNotIn(b'Hello, world!', response.body)
+        self.assertNotIn(b"Log from preprocessor", response.body)
+        self.assertNotIn(b"Log from postprocessor", response.body)
+        self.assertNotIn(b"/mock/json", response.body)
+        self.assertNotIn(b"Hello, world!", response.body)

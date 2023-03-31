@@ -3,7 +3,7 @@ import sys
 from urllib import quote_plus, _is_unicode
 
 
-def urlencode(query, doseq=0, safe='/'):
+def urlencode(query, doseq=0, safe="/"):
     """Patched py2 version of urlencode - added `safe` parameter (py3 version
     supports this).
 
@@ -19,7 +19,7 @@ def urlencode(query, doseq=0, safe='/'):
     input.
     """
 
-    if hasattr(query,"items"):
+    if hasattr(query, "items"):
         # mapping objects
         query = query.items()
     else:
@@ -35,7 +35,7 @@ def urlencode(query, doseq=0, safe='/'):
             # allowed empty dicts that type of behavior probably should be
             # preserved for consistency
         except TypeError:
-            ty,va,tb = sys.exc_info()
+            ty, va, tb = sys.exc_info()
             raise TypeError, "not a valid non-string sequence or mapping object", tb
 
     l = []
@@ -44,19 +44,19 @@ def urlencode(query, doseq=0, safe='/'):
         for k, v in query:
             k = quote_plus(str(k), safe=safe)
             v = quote_plus(str(v), safe=safe)
-            l.append(k + '=' + v)
+            l.append(k + "=" + v)
     else:
         for k, v in query:
             k = quote_plus(str(k), safe=safe)
             if isinstance(v, str):
                 v = quote_plus(v, safe=safe)
-                l.append(k + '=' + v)
+                l.append(k + "=" + v)
             elif _is_unicode(v):
                 # is there a reasonable way to convert to ASCII?
                 # encode generates a string, but "replace" or "ignore"
                 # lose information and "strict" can raise UnicodeError
-                v = quote_plus(v.encode("ASCII","replace"), safe=safe)
-                l.append(k + '=' + v)
+                v = quote_plus(v.encode("ASCII", "replace"), safe=safe)
+                l.append(k + "=" + v)
             else:
                 try:
                     # is this a sufficient test for sequence-ness?
@@ -64,9 +64,9 @@ def urlencode(query, doseq=0, safe='/'):
                 except TypeError:
                     # not a sequence
                     v = quote_plus(str(v), safe=safe)
-                    l.append(k + '=' + v)
+                    l.append(k + "=" + v)
                 else:
                     # loop over the sequence
                     for elt in v:
-                        l.append(k + '=' + quote_plus(str(elt), safe=safe))
-    return '&'.join(l)
+                        l.append(k + "=" + quote_plus(str(elt), safe=safe))
+    return "&".join(l)

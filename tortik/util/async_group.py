@@ -22,9 +22,9 @@ class AsyncGroup(object):
         self.finish_time = None
 
         if self.name is not None:
-            self.log_name = '{0} group'.format(self.name)
+            self.log_name = "{0} group".format(self.name)
         else:
-            self.log_name = 'group'
+            self.log_name = "group"
 
     def _log(self, msg, *args, **kw):
         self.log_fun(self.log_name + ": " + msg, *args, **kw)
@@ -32,7 +32,7 @@ class AsyncGroup(object):
     def finish(self):
         if not self.finished:
             self.finish_time = time.time()
-            self._log('done in %.2fms', (self.finish_time - self.start_time)*1000.)
+            self._log("done in %.2fms", (self.finish_time - self.start_time) * 1000.0)
             self.finished = True
 
             try:
@@ -46,12 +46,12 @@ class AsyncGroup(object):
             self.finish()
 
     def _inc(self):
-        assert(not self.finished)
+        assert not self.finished
         self.counter += 1
 
     def _dec(self):
         self.counter -= 1
-        self._log('%s requests pending', self.counter)
+        self._log("%s requests pending", self.counter)
 
     def add(self, intermediate_cb):
         self._inc()
@@ -69,7 +69,7 @@ class AsyncGroup(object):
                 else:
                     self.try_finish()
             else:
-                self._log('Ignoring response because of already finished group')
+                self._log("Ignoring response because of already finished group")
 
         return wrapper
 
