@@ -103,6 +103,12 @@ def main():
         module=r"tornado\..*",
         message="callback arguments are deprecated",
     )
+    warnings.filterwarnings(
+        "ignore",
+        category=DeprecationWarning,
+        module=r"tornado\..*",
+        message="@asynchronous is deprecated",
+    )
     warnings.filterwarnings("ignore", category=PendingDeprecationWarning)
     warnings.filterwarnings(
         "error", category=PendingDeprecationWarning, module=r"tornado\..*"

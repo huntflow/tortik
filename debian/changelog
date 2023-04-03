@@ -1,3 +1,8 @@
+python-tortik (0.2.13) unstable; urgency=low
+
+   * Rollback to asynchronous decorator
+
+  -- Nikita Kotov <kotov@huntflow.ru>  Wed, 3 Apr 2023 15:30:00 +0300
 python-tortik (0.2.12) unstable; urgency=low
 
    * BUGFIX: coroutine decorator not worked as expected
