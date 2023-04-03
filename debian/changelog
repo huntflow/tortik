@@ -1,3 +1,8 @@
+python-tortik (0.2.12) unstable; urgency=low
+
+   * BUGFIX: coroutine decorator not worked as expected
+
+  -- Nikita Kotov <kotov@huntflow.ru>  Wed, 3 Apr 2023 11:30:00 +0300
 python-tortik (0.2.11) unstable; urgency=low
 
    * better logging
