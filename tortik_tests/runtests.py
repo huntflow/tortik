@@ -29,6 +29,7 @@ TEST_MODULES = [
     "tortik_tests.util_test",
     "tortik_tests.postprocessor_test",
     "tortik_tests.preprocessor_test",
+    "tortik_tests.handler_test",
 ]
 
 
@@ -95,12 +96,6 @@ def main():
         category=DeprecationWarning,
         module=r"tornado\..*",
         message="StackContext is deprecated",
-    )
-    warnings.filterwarnings(
-        "ignore",
-        category=DeprecationWarning,
-        module=r"tornado\..*",
-        message="@asynchronous is deprecated",
     )
     warnings.filterwarnings(
         "ignore",
