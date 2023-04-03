@@ -60,14 +60,6 @@ def _gen_requestid():
     ).hexdigest()
 
 
-_decorates = decorate_all(
-    [
-        (tornado.web.gen.coroutine, "coroutine"),  # should be the last
-    ]
-)
-
-
-@six.add_metaclass(_decorates)
 class RequestHandler(tornado.web.RequestHandler):
     """Base handler for request handle
 
