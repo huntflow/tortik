@@ -182,7 +182,7 @@ class PageLogger(logging.LoggerAdapter):
             + additional_data
         )
 
-        self.info("MONIK {}".format(" ".join("{}={}".format(k, v) for (k, v) in data)))
+        self.debug("MONIK {}".format(" ".join("{}={}".format(k, v) for (k, v) in data)))
 
         self._completed = True
 
