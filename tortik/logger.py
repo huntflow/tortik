@@ -19,6 +19,7 @@ define(
     "tortik_logformat",
     default="[%(process)s %(asctime)s %(levelname)s %(name)s] %(message)s",
 )
+TORNADO_MAGIC_RESPONSE_CODE = 599
 
 
 class RequestIdFilter(logging.Filter):
@@ -127,10 +128,21 @@ class PageLogger(logging.LoggerAdapter):
             level = logging.ERROR
             extra_data["req_body"] = resp.request.body
 
+        if resp.code == TORNADO_MAGIC_RESPONSE_CODE:
+            if hasattr(resp.error, "errno"):
+                # Extract curl error number to log
+                errno = "errno={} ".format(resp.error.errno)
+            else:
+                errno = ""
+            error = " ({}error: {}) ".format(errno, str(resp.error))
+        else:
+            error = ""
+
         self.log(
             level,
-            "Complete %s %s %s in %sms",
+            "Complete %s%.100s %s %s in %sms",
             resp.code,
+            error,
             resp.request.method,
             resp.request.url,
             int(resp.request_time * 1000.0),
