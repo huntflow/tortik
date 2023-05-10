@@ -18,4 +18,4 @@ def __parse_version_from_changelog():
         return None
 
 
-version = __parse_version_from_changelog() or "0.2.15"
+version = __parse_version_from_changelog() or "0.2.16"

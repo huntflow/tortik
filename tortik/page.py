@@ -258,7 +258,7 @@ class RequestHandler(tornado.web.RequestHandler):
                 name,
                 response.code,
                 content_type,
-                response.body.decode("utf-8", errors="replace"),
+                response.body.decode("utf-8", errors="replace") if response.body else None,
             )
             try:
                 if "xml" in content_type:
