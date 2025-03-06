@@ -54,7 +54,7 @@ install_requires = [
     "jinja2>2,<3",
     "six",
     "MarkupSafe<2.1.0",
-    "prometheus_client>=0.12.0",
+    "prometheus_client>=0.8.0",
 ]
 
 setup(
