@@ -11,6 +11,8 @@ from functools import partial
 from copy import copy
 import json
 
+from tortik.metrics import observe_processing_time, count_request
+
 try:
     import urlparse  # py2
 except ImportError:
@@ -272,6 +274,7 @@ class RequestHandler(tornado.web.RequestHandler):
                 self.add(name, response.data)
 
             self.responses[name] = response
+            observe_processing_time(response)
             self.log.request_complete(response)
 
         for req in requests:
@@ -363,6 +366,8 @@ class RequestHandler(tornado.web.RequestHandler):
                 ),
             }
         )
+
+        count_request(method=method, endpoint=urlparse.urlunsplit((scheme, url_prefix, path, query, "")))
 
         req = tornado.httpclient.HTTPRequest(
             url=urlparse.urlunsplit((scheme, url_prefix, path, query, "")),
