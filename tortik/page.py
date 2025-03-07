@@ -164,6 +164,7 @@ class RequestHandler(tornado.web.RequestHandler):
         return None
 
     def on_finish(self):
+        observe_processing_time(self.request)
         self.log.complete_logging(self.get_status())
 
     def write_error(self, status_code, **kwargs):
@@ -181,6 +182,7 @@ class RequestHandler(tornado.web.RequestHandler):
                 return
 
             self.set_status(status_code)
+            observe_processing_time(self.request)
             self.log.complete_logging(status_code)
             self.finish_with_debug()
 
@@ -217,6 +219,7 @@ class RequestHandler(tornado.web.RequestHandler):
 
     def complete(self, output_data=None):
         def finished_cb(handler, data):
+            observe_processing_time(handler.request)
             handler.log.complete_logging(handler.get_status())
             if handler.debug_type == _DEBUG_ALL:
                 self.finish_with_debug()
