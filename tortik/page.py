@@ -182,7 +182,7 @@ class RequestHandler(tornado.web.RequestHandler):
                 return
 
             self.set_status(status_code)
-            observe_processing_time(self.request,status_code)
+            observe_processing_time(self.request, status_code)
             self.log.complete_logging(status_code)
             self.finish_with_debug()
 
@@ -219,7 +219,6 @@ class RequestHandler(tornado.web.RequestHandler):
 
     def complete(self, output_data=None):
         def finished_cb(handler, data):
-            observe_processing_time(handler.request,handler.get_status())
             handler.log.complete_logging(handler.get_status())
             if handler.debug_type == _DEBUG_ALL:
                 self.finish_with_debug()
@@ -234,10 +233,8 @@ class RequestHandler(tornado.web.RequestHandler):
                 if index == last:
                     return finished_cb
                 else:
-
                     def _cb(handler, data):
                         self.postprocessors[index + 1](handler, data, add_cb(index + 1))
-
                     return _cb
 
             self.postprocessors[0](self, output_data, add_cb(0))
