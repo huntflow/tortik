@@ -50,18 +50,21 @@ def count_request(method, endpoint):
     REQUEST_COUNT.labels(method=method, endpoint=endpoint).inc()
 
 
+
 def observe_processing_time(response, code):
-    method = None
-    endpoint = None
+    method = "UNKNOWN"
+    endpoint = "UNKNOWN"
     request_time = None
-    if response is HTTPServerRequest:
+
+    if isinstance(response, HTTPServerRequest):
         method = response.method
         endpoint = response.uri
-        request_time = time.time() - response._start_time
-    else:
+        request_time = time.time() - getattr(response, "_start_time", time.time())
+    elif hasattr(response, "request"):
         method = response.request.method
         endpoint = response.request.uri
         code = response.code
         request_time = response.request_time * 1000.0
 
-    PROCESSING_TIME.labels(method=method, endpoint=endpoint, code=code).observe(float(request_time))
+    if request_time is not None:
+        PROCESSING_TIME.labels(method=method, endpoint=endpoint, code=code).observe(float(request_time))
