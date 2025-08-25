@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import logging
 import os
 import sys
 import time
@@ -60,6 +60,22 @@ def _gen_requestid():
     ).hexdigest()
 
 
+def get_environment():
+    if not hasattr(get_environment, "environment"):
+        environment = Environment(
+            autoescape=True,
+            loader=PackageLoader("tortik", "templates"),
+            extensions=["jinja2.ext.autoescape"],
+            auto_reload=options.debug,
+        )
+
+        environment.filters["split"] = lambda x, y: x.split(y)
+        environment.template = environment.get_template("debug.html")
+        get_environment.environment = environment
+
+    return get_environment.environment
+
+
 _decorates = decorate_all(
     [
         (tornado.web.asynchronous, "asynchronous"),  # should be the last
@@ -96,15 +112,7 @@ class RequestHandler(tornado.web.RequestHandler):
         if self.debug_type != _DEBUG_NONE and not hasattr(
             RequestHandler, "debug_loader"
         ):
-            environment = Environment(
-                autoescape=True,
-                loader=PackageLoader("tortik", "templates"),
-                extensions=["jinja2.ext.autoescape"],
-                auto_reload=options.debug,
-            )
-
-            environment.filters["split"] = lambda x, y: x.split(y)
-            RequestHandler.debug_loader = environment
+            RequestHandler.debug_loader = get_environment()
 
         self.error_detected = False
 
@@ -192,7 +200,7 @@ class RequestHandler(tornado.web.RequestHandler):
             self.set_status(200)
 
         self.finish(
-            RequestHandler.debug_loader.get_template("debug.html").render(
+            RequestHandler.debug_loader.template.render(
                 data=self.log.get_debug_info(),
                 output_data=self.get_data(),
                 size=sys.getsizeof,
@@ -253,13 +261,14 @@ class RequestHandler(tornado.web.RequestHandler):
         def _on_fetch(response, name):
             content_type = response.headers.get("Content-Type", "").split(";")[0]
             response.data = None
-            self.log.debug(
-                'Got response for "%s" (code = %s, content_type = %s): %.200s',
-                name,
-                response.code,
-                content_type,
-                response.body.decode("utf-8", errors="replace") if response.body else None,
-            )
+            if self.log.isEnabledFor(logging.DEBUG):
+                self.log.debug(
+                    'Got response for "%s" (code = %s, content_type = %s): %.200s',
+                    name,
+                    response.code,
+                    content_type,
+                    response.body.decode("utf-8", errors="replace") if response.body else None,
+                )
             try:
                 if "xml" in content_type:
                     response.data = parse_xml(response)
@@ -344,10 +353,11 @@ class RequestHandler(tornado.web.RequestHandler):
             query = parsed_full_url.query
 
         if method in ["GET", "HEAD", "DELETE"]:
-            parsed_query = urlparse.parse_qs(query)
-            parsed_query.update(
-                data if isinstance(data, dict) else urlparse.parse_qs(data)
-            )
+            parsed_query = urlparse.parse_qs(query) if query else {}
+            if data:
+                parsed_query.update(
+                    data if isinstance(data, dict) else urlparse.parse_qs(data)
+                )
             query = make_qs(parsed_query, safe=safe)
         else:
             body = make_qs(data, safe=safe) if isinstance(data, dict) else data

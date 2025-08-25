@@ -4,6 +4,7 @@ import logging
 import logging.handlers
 from collections import OrderedDict
 from datetime import datetime
+from itertools import chain
 
 from tornado.options import options, define
 
@@ -65,10 +66,11 @@ class PageLogger(logging.LoggerAdapter):
         self.handler_name = handler_name
         self.stages = OrderedDict()
         self.metrics = OrderedDict()
-        self.debug(
-            "Started {} {}".format(request.method, request.uri),
-            extra={_SKIP_EVENT: True},
-        )
+        if self.isEnabledFor(logging.DEBUG):
+            self.debug(
+                "Started {} {}".format(request.method, request.uri),
+                extra={_SKIP_EVENT: True},
+            )
         self._completed = False
 
     def process(self, msg, kwargs):
@@ -79,10 +81,11 @@ class PageLogger(logging.LoggerAdapter):
         return msg, kwargs
 
     def request_started(self, request):
-        self.debug(
-            "Requesting {} {}".format(request.method, request.url),
-            extra={_SKIP_EVENT: True},
-        )
+        if self.isEnabledFor(logging.DEBUG):
+            self.debug(
+                "Requesting {} {}".format(request.method, request.url),
+                extra={_SKIP_EVENT: True},
+            )
         if self.debug_info is not None:
             event = {
                 "type": "NET",
@@ -92,9 +95,11 @@ class PageLogger(logging.LoggerAdapter):
                     "method": request.method,
                     "headers": request.headers,
                     "data": request.body,
-                    "curl": request_to_curl_string(request),
                 },
             }
+            if self.isEnabledFor(logging.DEBUG):
+                # This is a very memory intensive operation
+                event["request"]["curl"] = request_to_curl_string(request)
             self.debug_info[request] = event
 
     def request_complete(self, resp):
@@ -138,16 +143,17 @@ class PageLogger(logging.LoggerAdapter):
         else:
             error = ""
 
-        self.log(
-            level,
-            "Complete %s%.100s %s %s in %sms",
-            resp.code,
-            error,
-            resp.request.method,
-            resp.request.url,
-            int(resp.request_time * 1000.0),
-            extra=extra_data,
-        )
+        if self.isEnabledFor(level):
+            self.log(
+                level,
+                "Complete %s%.100s %s %s in %sms",
+                resp.code,
+                error,
+                resp.request.method,
+                resp.request.url,
+                int(resp.request_time * 1000.0),
+                extra=extra_data,
+            )
 
     def add_metric(self, name, value):
         self.metrics[name] = value
@@ -177,24 +183,22 @@ class PageLogger(logging.LoggerAdapter):
             return
 
         if additional_data is None:
-            additional_data = []
+            additional_data = tuple()
 
-        data = (
-            [
-                ("handler", self.handler_name),
-                ("method", self.request.method),
-                ("code", status_code),
+        if self.isEnabledFor(logging.DEBUG):
+            data = chain(
                 (
-                    "total",
-                    int(1000 * self.request.request_time()),
-                ),  # <current_time> - <start> if request not finished yet
-            ]
-            + list(self.stages.items())
-            + list(self.metrics.items())
-            + additional_data
-        )
-
-        self.debug("MONIK {}".format(" ".join("{}={}".format(k, v) for (k, v) in data)))
+                    ("handler", self.handler_name),
+                    ("method", self.request.method),
+                    ("code", status_code),
+                    ("total", int(1000 * self.request.request_time())),
+                    # <current_time> - <start> if request not finished yet
+                ),
+                self.stages.items(),
+                self.metrics.items(),
+                additional_data,
+            )
+            self.debug("MONIK {}".format(" ".join("{}={}".format(k, v) for (k, v) in data)))
 
         self._completed = True
 
