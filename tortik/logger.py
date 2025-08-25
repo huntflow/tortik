@@ -95,6 +95,7 @@ class PageLogger(logging.LoggerAdapter):
                     "method": request.method,
                     "headers": request.headers,
                     "data": request.body,
+                    "curl": "",
                 },
             }
             if self.isEnabledFor(logging.DEBUG):
